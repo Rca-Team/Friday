@@ -1,0 +1,14 @@
+[
+  {
+    "language": "en",
+    "model": "vosk-model-small-en-us-0.15",
+    "license": "Apache-2.0",
+    "sha256": "30f26242c4eb449f948e42cb302dd7a686cb29a3423a8367f99ff41780942498"
+  },
+  {
+    "language": "hi",
+    "model": "vosk-model-small-hi-0.22",
+    "license": "Apache-2.0",
+    "sha256": "7c50a10866889f0ac21d912c20537a055a597ed09fc1d3e5bcd798f9f0017e48"
+  }
+]

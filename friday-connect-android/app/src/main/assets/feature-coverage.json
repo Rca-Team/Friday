@@ -1,0 +1,344 @@
+[
+  {
+    "name": "system_updater",
+    "description": "Pushes system updates automatically to the PC (via GitHub pull) and the connected Android mobile apps (via APK push).",
+    "target": "Desktop-connected",
+    "note": "Available through a paired, running desktop Friday. Android does not execute this Windows/Python tool locally."
+  },
+  {
+    "name": "undo",
+    "description": "Roll back the last change made to the computer — reversing a file move, copy, create, or edit, a desktop organization, a volume or brightness change, or a Wi-Fi toggle. Call this whenever the user says undo, revert, take it back, put it back, restore, or says they made a mistake. Use action='list' when they ask what can be undone.",
+    "target": "Desktop-connected",
+    "note": "Available through a paired, running desktop Friday. Android does not execute this Windows/Python tool locally."
+  },
+  {
+    "name": "recall_memory",
+    "description": "Search long-term memory for stored facts, preferences, user info, projects, or history. Use this when the user asks 'do you remember', 'what is my...', or when context about past instructions or preferences is needed.",
+    "target": "Android-native",
+    "note": "Read separate phone memory in Settings; desktop memory stays on PC."
+  },
+  {
+    "name": "dev_agent",
+    "description": "An autonomous coding agent that builds full projects, writes code, installs dependencies, runs the project, and automatically fixes errors. Use this when the user asks you to 'write a script', 'build an app', 'code a program', or 'run a project'.",
+    "target": "Desktop-connected",
+    "note": "Available through a paired, running desktop Friday. Android does not execute this Windows/Python tool locally."
+  },
+  {
+    "name": "background_monitor",
+    "description": "Sets up a background monitor to check crypto prices, system RAM/CPU, or website uptime. Use this when the user asks to be alerted when a condition is met (e.g., 'tell me if RAM goes over 90%' or 'alert me if bitcoin drops below 50000').",
+    "target": "Desktop-connected",
+    "note": "Available through a paired, running desktop Friday. Android does not execute this Windows/Python tool locally."
+  },
+  {
+    "name": "system_manager",
+    "description": "Checks the system health (CPU, RAM, disk, battery) and lists top resource-hogging apps. Can also be used to forcefully close or kill frozen or heavy applications.",
+    "target": "Desktop-connected",
+    "note": "Available through a paired, running desktop Friday. Android does not execute this Windows/Python tool locally."
+  },
+  {
+    "name": "check_instagram_messages",
+    "description": "Checks your Instagram inbox for any recent unread or direct messages. Use this when the user asks 'do I have any messages', 'check my instagram', or similar.",
+    "target": "Desktop-connected",
+    "note": "Available through a paired, running desktop Friday. Android does not execute this Windows/Python tool locally."
+  },
+  {
+    "name": "clipboard_processor",
+    "description": "Reads text from the user's Windows clipboard ONLY when the user explicitly requests it (e.g. 'what did I copy?', 'check my clipboard', 'read what I copied', 'paste my clipboard', 'analyze my clipboard'). NEVER call this tool unless Gaurav explicitly asks for clipboard contents.",
+    "target": "Desktop-connected",
+    "note": "Available through a paired, running desktop Friday. Android does not execute this Windows/Python tool locally."
+  },
+  {
+    "name": "instagram_reply",
+    "description": "Replies to a pending Instagram message or takes over the Instagram chat in auto-mode.",
+    "target": "Desktop-connected",
+    "note": "Available through a paired, running desktop Friday. Android does not execute this Windows/Python tool locally."
+  },
+  {
+    "name": "instagram_send_dm",
+    "description": "Sends an Instagram direct message to a username or conversation thread, and automatically opens the chat in your browser.",
+    "target": "Desktop-connected",
+    "note": "Available through a paired, running desktop Friday. Android does not execute this Windows/Python tool locally."
+  },
+  {
+    "name": "instagram_post_photo",
+    "description": "Publishes a photo directly to your Instagram feed and automatically opens the live post in your browser.",
+    "target": "Desktop-connected",
+    "note": "Available through a paired, running desktop Friday. Android does not execute this Windows/Python tool locally."
+  },
+  {
+    "name": "instagram_post_reel",
+    "description": "Publishes a video or Reel directly to your Instagram account and automatically opens the live Reel in your browser.",
+    "target": "Desktop-connected",
+    "note": "Available through a paired, running desktop Friday. Android does not execute this Windows/Python tool locally."
+  },
+  {
+    "name": "instagram_get_user_info",
+    "description": "Looks up profile details, bio, follower count, following count, and verified badge for any Instagram handle.",
+    "target": "Desktop-connected",
+    "note": "Available through a paired, running desktop Friday. Android does not execute this Windows/Python tool locally."
+  },
+  {
+    "name": "whatsapp_call",
+    "description": "Opens WhatsApp and prepares to call a specified contact. Use this when the user asks to call someone on WhatsApp.",
+    "target": "Desktop-connected",
+    "note": "Available through a paired, running desktop Friday. Android does not execute this Windows/Python tool locally."
+  },
+  {
+    "name": "open_app",
+    "description": "Opens any application on the Windows computer. Use this whenever the user asks to open, launch, or start any app, website, or program. Always call this tool — never just say you opened it.",
+    "target": "Android-native",
+    "note": "launch_app opens phone apps; Windows apps require the PC."
+  },
+  {
+    "name": "web_search",
+    "description": "Searches the web for any information.",
+    "target": "Desktop-connected",
+    "note": "Available through a paired, running desktop Friday. Android does not execute this Windows/Python tool locally."
+  },
+  {
+    "name": "weather_report",
+    "description": "Gives the weather report to user",
+    "target": "Desktop-connected",
+    "note": "Available through a paired, running desktop Friday. Android does not execute this Windows/Python tool locally."
+  },
+  {
+    "name": "send_message",
+    "description": "Sends a text message via WhatsApp, Telegram, Instagram DMs, or other messaging platform. Can also upload media to Instagram when mode=upload and media_path is supplied.",
+    "target": "Desktop-connected",
+    "note": "Available through a paired, running desktop Friday. Android does not execute this Windows/Python tool locally."
+  },
+  {
+    "name": "reminder",
+    "description": "Sets a timed reminder using Windows Task Scheduler.",
+    "target": "Android-native",
+    "note": "Local notification reminders; delivery timing may be delayed by Android."
+  },
+  {
+    "name": "youtube_video",
+    "description": "Controls YouTube. Use for: playing videos, summarizing a video's content, getting video info, or showing trending videos.",
+    "target": "Desktop-connected",
+    "note": "Available through a paired, running desktop Friday. Android does not execute this Windows/Python tool locally."
+  },
+  {
+    "name": "screen_process",
+    "description": "Captures and analyzes the screen or webcam image. MUST be called when user asks what is on screen, what you see, analyze my screen, look at camera, etc. You have NO visual ability without this tool. After calling this tool, stay SILENT — the vision module speaks directly.",
+    "target": "Cloud-assisted",
+    "note": "Attach a camera image or screenshot, or approve accessibility screen text for AI analysis."
+  },
+  {
+    "name": "computer_settings",
+    "description": "Controls the computer: volume, brightness, window management, keyboard shortcuts, typing text on screen, closing apps, fullscreen, dark mode, WiFi, restart, shutdown, scrolling, tab management, zoom, screenshots, lock screen, refresh/reload page. Use for ANY single computer control command. NEVER route to agent_task.",
+    "target": "Android-native",
+    "note": "Phone volume and flashlight; protected system toggles need Android settings."
+  },
+  {
+    "name": "smart_home_control",
+    "description": "Controls connected smart-home devices such as Atomberg fans and TP-Link Kasa lights/plugs. Use when the user asks to turn devices on or off, set fan speed, change brightness, or control a room.",
+    "target": "Desktop-connected",
+    "note": "Available through a paired, running desktop Friday. Android does not execute this Windows/Python tool locally."
+  },
+  {
+    "name": "connect_list_devices",
+    "description": "Lists devices connected to Friday Connect. Use when the user asks what devices are connected, what is online, or wants a simple inventory of paired devices.",
+    "target": "Desktop-connected",
+    "note": "Available through a paired, running desktop Friday. Android does not execute this Windows/Python tool locally."
+  },
+  {
+    "name": "connect_get_device",
+    "description": "Gets the details for one connected device by name, id, or natural reference such as my phone, my laptop, my PC, or my tablet.",
+    "target": "Desktop-connected",
+    "note": "Available through a paired, running desktop Friday. Android does not execute this Windows/Python tool locally."
+  },
+  {
+    "name": "connect_get_capabilities",
+    "description": "Returns the capabilities and permissions reported by a connected device. Use before trying any device command.",
+    "target": "Desktop-connected",
+    "note": "Available through a paired, running desktop Friday. Android does not execute this Windows/Python tool locally."
+  },
+  {
+    "name": "connect_execute",
+    "description": "Routes a Friday Connect command to a paired device through the gateway. Use for actions such as launch_app, open_url, get_battery, capture_screen, take_photo, clipboard_get, clipboard_set, send_file, receive_file, media_play, media_pause, volume_set, notification_list, get_device_info, close_app, mouse_move, keyboard_type, unlock_phone, file_list, file_read, file_write, file_delete.Do not execute device operations directly anywhere else.",
+    "target": "Android-native",
+    "note": "Paired PC control and confirmed phone accessibility steps."
+  },
+  {
+    "name": "unlock_device",
+    "description": "Unlocks a paired Android device using its saved PIN.",
+    "target": "Desktop-connected",
+    "note": "Available through a paired, running desktop Friday. Android does not execute this Windows/Python tool locally."
+  },
+  {
+    "name": "connect_pair_device",
+    "description": "Creates or approves Friday Connect pairing. Use to generate a QR code / pairing code for a new device, or to approve a pending pairing request.",
+    "target": "Desktop-connected",
+    "note": "Available through a paired, running desktop Friday. Android does not execute this Windows/Python tool locally."
+  },
+  {
+    "name": "connect_disconnect_device",
+    "description": "Disconnects a device from Friday Connect and marks it offline. Use when the user asks to disconnect, log out, or stop a paired device.",
+    "target": "Desktop-connected",
+    "note": "Available through a paired, running desktop Friday. Android does not execute this Windows/Python tool locally."
+  },
+  {
+    "name": "browser_control",
+    "description": "Complete browser automation powered by Microsoft Playwright MCP. Use for: opening websites, web searching, navigating, semantic accessibility snapshots, clicking elements or snapshot references, typing, form filling, hovering, executing JavaScript, taking screenshots, managing tabs, and any web-based task.",
+    "target": "Desktop-connected",
+    "note": "Available through a paired, running desktop Friday. Android does not execute this Windows/Python tool locally."
+  },
+  {
+    "name": "file_controller",
+    "description": "Manages files and folders: open, close, list, create, delete, move, copy, rename, read, write, find, disk usage, and organizing a desktop or any folder into subfolders by type/date. Can also be used to explore and manage files on a connected Android phone.",
+    "target": "Desktop-connected",
+    "note": "Available through a paired, running desktop Friday. Android does not execute this Windows/Python tool locally."
+  },
+  {
+    "name": "smart_organizer",
+    "description": "Smart Desktop & Downloads Organizer MCP with safe transaction rollback (undo), dry-run previews, duplicate file detection, empty folder cleanup, and archiving. Use when the user asks to organize, preview, declutter, clean, or find duplicate files on the desktop, downloads, or any folder.",
+    "target": "Desktop-connected",
+    "note": "Available through a paired, running desktop Friday. Android does not execute this Windows/Python tool locally."
+  },
+  {
+    "name": "desktop_control",
+    "description": "Controls the desktop: wallpaper, organize, preview, clean, undo, find_duplicates, list, stats.",
+    "target": "Desktop-connected",
+    "note": "Available through a paired, running desktop Friday. Android does not execute this Windows/Python tool locally."
+  },
+  {
+    "name": "agent_task",
+    "description": "Executes complex multi-step tasks requiring multiple different tools. Examples: 'research X and save to file', 'find and organize files'. DO NOT use for single commands. NEVER use for Steam/Epic — use game_updater.",
+    "target": "Desktop-connected",
+    "note": "Available through a paired, running desktop Friday. Android does not execute this Windows/Python tool locally."
+  },
+  {
+    "name": "productivity_brief",
+    "description": "Analyzes the current developer, robotics, CAD, or study activity and returns concise project context, safe background-task suggestions, and dated past deliverables. Use when the user asks what Friday can take over or how to work faster.",
+    "target": "Desktop-connected",
+    "note": "Available through a paired, running desktop Friday. Android does not execute this Windows/Python tool locally."
+  },
+  {
+    "name": "computer_control",
+    "description": "Direct computer control: type, click, hotkeys, scroll, move mouse, screenshots, find elements on screen.",
+    "target": "Desktop-connected",
+    "note": "Available through a paired, running desktop Friday. Android does not execute this Windows/Python tool locally."
+  },
+  {
+    "name": "game_updater",
+    "description": "THE ONLY tool for ANY Steam or Epic Games request. Use for: installing, downloading, updating games, listing installed games, checking download status, scheduling updates. ALWAYS call directly for any Steam/Epic/game request. NEVER use agent_task, browser_control, or web_search for Steam/Epic.",
+    "target": "Desktop-connected",
+    "note": "Available through a paired, running desktop Friday. Android does not execute this Windows/Python tool locally."
+  },
+  {
+    "name": "flight_finder",
+    "description": "Searches Google Flights and speaks the best options.",
+    "target": "Desktop-connected",
+    "note": "Available through a paired, running desktop Friday. Android does not execute this Windows/Python tool locally."
+  },
+  {
+    "name": "file_processor",
+    "description": "Processes any file that the user has uploaded or dropped onto the interface. Use this when the user refers to an uploaded file and wants an action on it. Supports: images (describe/ocr/resize/compress/convert), PDFs (summarize/extract_text/to_word), text files (summarize/fix/reformat/translate), CSV/Excel (analyze/stats/filter/sort/convert), JSON/XML (validate/format/analyze), code files (explain/review/fix/optimize/run/document/test), audio (transcribe/trim/convert/info), video (trim/extract_audio/extract_frame/compress/transcribe/info), archives (list/extract), presentations (summarize/extract_text). ALWAYS call this tool when a non-Word file has been uploaded and the user gives a command about it. If the user's command is ambiguous, pick the most logical action for that file type.",
+    "target": "Desktop-connected",
+    "note": "Available through a paired, running desktop Friday. Android does not execute this Windows/Python tool locally."
+  },
+  {
+    "name": "presentation_builder",
+    "description": "Creates editable PowerPoint presentations (.pptx) from a structured slide outline. Friday automatically infers the best visual style from the topic, searches for a matching online template when available, reuses cached templates, and falls back to the built-in designer if no suitable template is found. Use when the user asks for a deck, slideshow, presentation, pitch deck, or report slides.",
+    "target": "Desktop-connected",
+    "note": "Available through a paired, running desktop Friday. Android does not execute this Windows/Python tool locally."
+  },
+  {
+    "name": "spreadsheet_builder",
+    "description": "Creates editable Excel workbooks (.xlsx) from structured sheet data. Use for trackers, tables, analysis workbooks, budgets, planners, and other spreadsheet requests.",
+    "target": "Desktop-connected",
+    "note": "Available through a paired, running desktop Friday. Android does not execute this Windows/Python tool locally."
+  },
+  {
+    "name": "word_document",
+    "description": "Creates, edits, reads, summarizes, extracts text from, and opens editable Word documents (.docx). Use for Word document requests, letters, reports, headings, bullets, formatting edits, and preserving existing formatting.",
+    "target": "Desktop-connected",
+    "note": "Available through a paired, running desktop Friday. Android does not execute this Windows/Python tool locally."
+  },
+  {
+    "name": "pdf_document",
+    "description": "Creates editable-style PDF documents (.pdf) from structured content or converts DOCX / text files into PDFs. Use for PDF creation, PDF exports, and PDF generation requests that need a direct file output.",
+    "target": "Desktop-connected",
+    "note": "Available through a paired, running desktop Friday. Android does not execute this Windows/Python tool locally."
+  },
+  {
+    "name": "shutdown_friday",
+    "description": "Shuts down the assistant completely. Call this when the user expresses intent to end the conversation, close the assistant, say goodbye, or stop Friday. The user can say this in ANY language.",
+    "target": "Desktop-connected",
+    "note": "Available through a paired, running desktop Friday. Android does not execute this Windows/Python tool locally."
+  },
+  {
+    "name": "switch_voice_persona",
+    "description": "Switches the assistant vocal matrix between 'friday' (OG FRIDAY - authentic Irish female, Kerry Condon) and 'jarvis' (JARVIS - distinguished British male, Paul Bettany). Use whenever the user asks to change voice, use Jarvis voice, switch to Friday voice, etc.",
+    "target": "Desktop-connected",
+    "note": "Available through a paired, running desktop Friday. Android does not execute this Windows/Python tool locally."
+  },
+  {
+    "name": "switch_stark_design",
+    "description": "Switches the visual design, floating HUD orb, and color matrix to an iconic Tony Stark armor or arc reactor. Available designs: 'nanotech' (Mark L Nanotech RT - electric cyan arc reactor with quantum rings), 'mark_3' (Mark III Classic Armor - hotrod crimson & stark gold unibeam), 'hulkbuster' (Veronica MK-XLIV - industrial magma amber & hex-armor), 'edith' (E.D.I.T.H. Tactical HUD - AR cobalt blue radar & reticles), 'stealth' (Mark II Supersonic Stealth - titanium chrome silver), 'palladium' (Mark I Cave Palladium Core - 10 copper coils & incandescent glow). Use whenever the user asks to change design, switch look, set theme to Hulkbuster, Mark 3, Edith, etc.",
+    "target": "Desktop-connected",
+    "note": "Available through a paired, running desktop Friday. Android does not execute this Windows/Python tool locally."
+  },
+  {
+    "name": "save_memory",
+    "description": "Save an important personal fact about the user to long-term memory. Call this silently whenever the user reveals something worth remembering: name, age, city, job, preferences, hobbies, relationships, projects, or future plans. Do NOT call for: weather, reminders, searches, or one-time commands. Do NOT announce that you are saving — just call it silently. Values must be in English regardless of the conversation language.",
+    "target": "Android-native",
+    "note": "Edit phone memory in Settings or use the confirmed save_memory phone tool."
+  },
+  {
+    "name": "spotify_controller",
+    "description": "Plays and controls music via Spotify and Google Chrome. ALWAYS use this tool whenever the user asks to play any song, music, track, or artist (e.g. 'play Starboy', 'play music on Spotify'), or control playback ('pause the music', 'resume', 'skip song', 'next track', 'volume up', 'volume down', 'mute'). Do NOT use open_app for playing songs.",
+    "target": "Desktop-connected",
+    "note": "Available through a paired, running desktop Friday. Android does not execute this Windows/Python tool locally."
+  },
+  {
+    "name": "calendar_scheduler",
+    "description": "Manages calendar events, appointments, and schedules. Use whenever the user asks to schedule a meeting, check upcoming events, view schedule for today/tomorrow, or remove an event.",
+    "target": "Android-native",
+    "note": "Prepare a calendar event for user review; Google integrations run on PC."
+  },
+  {
+    "name": "daily_briefing",
+    "description": "Delivers a complete daily briefing including time, date, today's schedule/calendar events, and top world & tech headlines. Use whenever the user asks for their daily briefing, morning update, or what's happening today.",
+    "target": "Desktop-connected",
+    "note": "Available through a paired, running desktop Friday. Android does not execute this Windows/Python tool locally."
+  },
+  {
+    "name": "google_workspace",
+    "description": "Full Google Workspace MCP for Gmail, Calendar, and Google Drive automation. Supports: reading unread emails, listing inbox, searching emails, sending emails; listing calendar events, adding calendar events; searching Drive files, reading Drive files, and uploading files to Google Drive.",
+    "target": "Desktop-connected",
+    "note": "Available through a paired, running desktop Friday. Android does not execute this Windows/Python tool locally."
+  },
+  {
+    "name": "system_diagnostics",
+    "description": "Local OS Hardware and System Diagnostics MCP. Checks battery health, power status, CPU usage and thermals, RAM utilization and top memory/CPU hogs, storage drive space, and controls multi-monitor display brightness. Can safely terminate frozen apps.",
+    "target": "Android-native",
+    "note": "Phone battery/device diagnostics; Windows process diagnostics run on PC."
+  },
+  {
+    "name": "auto_heal",
+    "description": "Autonomous Self-Healing and Continuous Self-Improvement System. Analyzes tracebacks/exceptions in first-party codebase, synthesizes surgical code hotfixes, validates AST syntax in safety sandbox, applies hotfixes with atomic backup, or rolls back changes. Also manages learned behavioral rules and persistent user directives.",
+    "target": "Desktop-connected",
+    "note": "Available through a paired, running desktop Friday. Android does not execute this Windows/Python tool locally."
+  },
+  {
+    "name": "calorie_counter",
+    "description": "Analyzes food and meals to report calories, macronutrients (protein, carbs, fat, fiber), and dietary advice. Can capture a live snapshot via webcam, inspect an image file, or analyze a spoken/typed meal description. Use whenever the user asks about the calories or nutritional value of food.",
+    "target": "Desktop-connected",
+    "note": "Available through a paired, running desktop Friday. Android does not execute this Windows/Python tool locally."
+  },
+  {
+    "name": "pushup_counter",
+    "description": "Live AI workout and repetition counter. Tracks reps, tempo, and calories burned for pushups, squats, and bodyweight exercises through the webcam with live HUD overlay. Use whenever the user asks to count pushups, track squats, or start a workout.",
+    "target": "Desktop-connected",
+    "note": "Available through a paired, running desktop Friday. Android does not execute this Windows/Python tool locally."
+  },
+  {
+    "name": "upload_video",
+    "description": "Automates video publishing to TikTok, YouTube Shorts, or Instagram. Auto-locates recent videos on Desktop/Downloads, generates viral SEO captions and tags, copies metadata to clipboard, reveals the file in Explorer, and launches the studio uploader.",
+    "target": "Desktop-connected",
+    "note": "Available through a paired, running desktop Friday. Android does not execute this Windows/Python tool locally."
+  }
+]

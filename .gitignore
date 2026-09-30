@@ -89,3 +89,12 @@ brahma-connect-android/local.properties
 # Patch backups
 config/patch_backups/
 
+# Friday Android assistant and private gateway data
+config/friday_connect/devices.json
+config/friday_connect/mobile/
+friday-connect-android/.gradle/
+friday-connect-android/local.properties
+friday-connect-android/app/src/main/assets/voice-en/
+friday-connect-android/app/src/main/assets/voice-hi/
+.gradle-build/
+.build-venv/

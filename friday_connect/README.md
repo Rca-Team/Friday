@@ -1,0 +1,30 @@
+# Friday Connect
+
+For Android pairing and access over mobile data, see [Mobile setup](MOBILE_SETUP.md).
+
+Friday Connect is the local multi-device transport layer for Friday AI.
+
+It keeps the AI brain inside the existing Friday desktop app and adds a
+gateway that can pair with companion devices on the local network.
+
+## Included foundation
+
+- FastAPI and WebSocket gateway scaffold
+- Persistent device registry
+- Temporary pairing offers with expiring codes
+- Device capability tracking
+- Command routing skeleton
+- Optional mDNS discovery via Zeroconf when installed
+- JSON protocol definitions with required message fields
+
+## Protocol
+
+Every message includes:
+
+- `type`
+- `request_id`
+- `timestamp`
+- `payload`
+
+See [`agents/PROTOCOL.md`](agents/PROTOCOL.md) for the message contract and the
+initial handshake flow.

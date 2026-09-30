@@ -3453,6 +3453,9 @@ class BrahmaLive:
             self.ui.set_state("LISTENING")
 
     def speak(self, text: str):
+        gateway = getattr(self, "_friday_connect", None)
+        if gateway is not None and text:
+            gateway.broadcast_chat_message({"role": "assistant", "text": text, "sender": "Friday", "timestamp": time.time()})
         text = (text or "").strip()
         if not text:
             return
@@ -4502,6 +4505,11 @@ def main():
             dashboard_started=dashboard is not None,
             enable_dashboard=dashboard_enabled,
         )
+        if brahma_connect is not None:
+            brahma_echo._friday_connect = brahma_connect
+            def _mobile_chat_handler(text: str, device_id: str = ""):
+                brahma_echo._on_text_command(text, source="mobile")
+            brahma_connect.on_chat_message = _mobile_chat_handler
         try:
             if plugin_manager is not None:
                 brahma_echo.plugin_manager = plugin_manager

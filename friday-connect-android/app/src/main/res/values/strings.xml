@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Friday AI</string>
+    <string name="accessibility_service_description">FRIDAY accessibility bridge for device control setup. Created by Gaurav.</string>
+    <string name="developer_credits">Created and Engineered by Gaurav</string>
+</resources>
