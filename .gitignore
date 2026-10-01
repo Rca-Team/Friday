@@ -5,6 +5,7 @@ __pycache__/
 *.pyd
 
 # Runtime logs and generated files
+outputs/
 *.log
 log.txt
 crash_log.txt
