@@ -18,6 +18,8 @@ class UpdateChecker(QObject):
         self._check_thread = None
 
     def start(self):
+        if getattr(sys, "frozen", False):
+            return  # Installed releases are upgraded through the setup executable.
         if self._check_thread is None:
             self._check_thread = threading.Thread(target=self._check_loop, daemon=True, name="updater-thread")
             self._check_thread.start()

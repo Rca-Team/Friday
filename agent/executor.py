@@ -34,7 +34,7 @@ def _get_api_key() -> str:
         return json.load(f)["gemini_api_key"]
 
 def _run_generated_code(description: str, speak: Callable | None = None) -> str:
-    import google.generativeai as genai
+    from core.gemini_client import GeminiModel
 
     if speak:
         speak("Writing custom code for this task, sir.")
@@ -53,9 +53,9 @@ def _run_generated_code(description: str, speak: Callable | None = None) -> str:
         except Exception:
             pass
 
-    genai.configure(api_key=_get_api_key())
-    model = genai.GenerativeModel(
+    model = GeminiModel(
         model_name="gemini-3.1-flash-lite",
+        api_key=_get_api_key(),
         system_instruction=(
             "You are an expert Python developer. "
             "Write clean, complete, working Python code. "
@@ -151,9 +151,8 @@ def _inject_context(params: dict, tool: str, step_results: dict, goal: str = "")
 
 
 def _detect_language(text: str) -> str:
-    import google.generativeai as genai
-    genai.configure(api_key=_get_api_key())
-    model = genai.GenerativeModel("gemini-3.1-flash-lite")
+    from core.gemini_client import GeminiModel
+    model = GeminiModel("gemini-3.1-flash-lite", api_key=_get_api_key())
     try:
         response = model.generate_content(
             f"What language is this text written in? "
@@ -169,9 +168,8 @@ def _translate_to_goal_language(content: str, goal: str) -> str:
     if not goal:
         return content
     try:
-        import google.generativeai as genai
-        genai.configure(api_key=_get_api_key())
-        model = genai.GenerativeModel("gemini-3.1-flash-lite")
+        from core.gemini_client import GeminiModel
+        model = GeminiModel("gemini-3.1-flash-lite", api_key=_get_api_key())
 
         target_lang = _detect_language(goal)
         print(f"[Executor] 🌐 Translating to: {target_lang}")
@@ -580,9 +578,8 @@ class AgentExecutor:
     def _summarize(self, goal: str, completed_steps: list, speak: Callable | None) -> str:
         fallback = f"All done, sir. Completed {len(completed_steps)} steps for: {goal[:60]}."
         try:
-            import google.generativeai as genai
-            genai.configure(api_key=_get_api_key())
-            model     = genai.GenerativeModel(model_name="gemini-3.1-flash-lite")
+            from core.gemini_client import GeminiModel
+            model = GeminiModel(model_name="gemini-3.1-flash-lite", api_key=_get_api_key())
             steps_str = "\n".join(f"- {s.get('description', '')}" for s in completed_steps)
             prompt    = (
                 f'User goal: "{goal}"\n'

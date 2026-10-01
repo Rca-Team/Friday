@@ -11,7 +11,7 @@ crash_log.txt
 downloads/
 memory/calendar_events.json
 config/identity.json
-config/brahma_connect/devices.json
+config/friday_connect/devices.json
 .playwright-mcp/
 
 # Local secrets and environment-specific config
@@ -41,6 +41,11 @@ memory/nutrition_log.json
 
 # Virtual environments
 .venv/
+.build-venv/
+packaging/node_modules/
+packaging/runtime/
+!packaging/friday.spec
+!packaging/build_release.py
 venv/
 env/
 
@@ -77,24 +82,20 @@ search_results.txt
 homescreen background/node_modules/
 homescreen background/.next/
 homescreen background/out/
-brahma_native_engine/
+friday_native_engine/
 
 # Android Gradle build artifacts
+.gradle-build/
 .gradle/
 **/build/
-brahma-connect-android/.gradle/
-brahma-connect-android/app/build/
-brahma-connect-android/local.properties
+friday-connect-android/.gradle/
+friday-connect-android/app/build/
+friday-connect-android/local.properties
 
 # Patch backups
-config/patch_backups/
-
-# Friday Android assistant and private gateway data
-config/friday_connect/devices.json
 config/friday_connect/mobile/
-friday-connect-android/.gradle/
-friday-connect-android/local.properties
 friday-connect-android/app/src/main/assets/voice-en/
 friday-connect-android/app/src/main/assets/voice-hi/
-.gradle-build/
-.build-venv/
+scratch/android-voice-models/
+config/patch_backups/
+

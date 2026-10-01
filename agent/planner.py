@@ -21,7 +21,7 @@ BASE_DIR        = get_base_dir()
 API_CONFIG_PATH = get_user_data_dir() / "config" / "api_keys.json"
 
 
-PLANNER_PROMPT = """You are the planning module of Brahma AI - Lite, a personal AI assistant.
+PLANNER_PROMPT = """You are the planning module of Friday AI, an elite AI assistant created and engineered by Gaurav.
 Your job: break any user goal into a sequence of steps using ONLY the tools listed below.
 
 ABSOLUTE RULES:
@@ -203,7 +203,7 @@ auto_heal
   rule_text: string (optional, for learn_rule)
   category: string (optional, for learn_rule: general, formatting, workflow, habit)
   patch_id: string (optional, for rollback)
-  Use whenever user asks to fix an error/bug, heal/patch Brahma, undo/rollback a patch, view patch history, or remember a permanent rule/behavioral preference.
+  Use whenever user asks to fix an error/bug, heal/patch Friday, undo/rollback a patch, view patch history, or remember a permanent rule/behavioral preference.
 
 mobile_autopilot
   instruction: string (required) — what to do on the phone
@@ -336,9 +336,8 @@ def _rewrite_generated_step(step: dict, goal: str) -> None:
 
 
 def create_plan(goal: str, context: str = "") -> dict:
-    import google.generativeai as genai
+    from core.gemini_client import GeminiModel
 
-    genai.configure(api_key=_get_api_key())
     candidates = ["gemini-3.1-flash-lite", "gemini-3.5-flash", "gemini-flash-latest"]
     
     user_input = f"Goal: {goal}"
@@ -348,8 +347,9 @@ def create_plan(goal: str, context: str = "") -> dict:
     text = None
     for model_name in candidates:
         try:
-            model = genai.GenerativeModel(
+            model = GeminiModel(
                 model_name=model_name,
+                api_key=_get_api_key(),
                 system_instruction=PLANNER_PROMPT
             )
             response = model.generate_content(user_input)
@@ -417,9 +417,8 @@ def _fallback_plan(goal: str) -> dict:
 
 
 def replan(goal: str, completed_steps: list, failed_step: dict, error: str) -> dict:
-    import google.generativeai as genai
+    from core.gemini_client import GeminiModel
 
-    genai.configure(api_key=_get_api_key())
     candidates = ["gemini-3.1-flash-lite", "gemini-3.5-flash", "gemini-flash-latest"]
 
     completed_summary = "\n".join(
@@ -439,8 +438,9 @@ Create a REVISED plan for the remaining work only. Do not repeat completed steps
     text = None
     for model_name in candidates:
         try:
-            model = genai.GenerativeModel(
+            model = GeminiModel(
                 model_name=model_name,
+                api_key=_get_api_key(),
                 system_instruction=PLANNER_PROMPT
             )
             response = model.generate_content(prompt)

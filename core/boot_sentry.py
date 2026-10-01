@@ -1,6 +1,6 @@
 from core.user_paths import get_user_data_dir
 """
-Boot Sentry for Brahma AI
+Boot Sentry for Friday AI
 Runs at absolute startup before any heavy modules or UI to guarantee boot resilience.
 Detects if the previous session crashed right after an auto-patch, and safely rolls back.
 """
@@ -64,7 +64,7 @@ def check_and_recover_on_boot() -> bool:
         if CRASH_LOG.exists():
             shutil.move(str(CRASH_LOG), str(crash_archive))
 
-        print(f"[BootSentry] ✅ Successfully restored '{target_file.name}'! Brahma AI recovered.")
+        print(f"[BootSentry] ✅ Successfully restored '{target_file.name}'! Friday AI recovered.")
         return True
     except Exception as e:
         print(f"[BootSentry] ❌ Recovery failed: {e}")
@@ -72,4 +72,5 @@ def check_and_recover_on_boot() -> bool:
 
 
 # Automatically execute recovery check on import
-check_and_recover_on_boot()
+if not getattr(sys, "frozen", False):
+    check_and_recover_on_boot()

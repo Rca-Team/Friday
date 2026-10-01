@@ -1,7 +1,7 @@
 from core.user_paths import get_user_data_dir
 # actions/daily_briefing.py
 """
-Unified Morning Intelligence Briefing for Brahma AI.
+Unified Morning Intelligence Briefing for Friday AI.
 
 Compiles a comprehensive, executive daily intelligence report:
 1. Live Weather (Temperature, conditions, humidity, outdoor feel)
@@ -310,7 +310,7 @@ def daily_briefing(
     if player:
         try:
             player.show_daily_briefing(data)
-            player.write_log(f"Brahma Echo: {narrative}")
+            player.write_log(f"Friday AI: {narrative}")
         except Exception as e:
             print(f"[DailyBriefing] UI render notice: {e}")
 

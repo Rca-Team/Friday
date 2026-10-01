@@ -1,6 +1,6 @@
 """
-Auto-Heal & Self-Patching Engine for Brahma AI
-Enables Brahma to detect its own bugs, tracebacks, and tool exceptions,
+Auto-Heal & Self-Patching Engine for Friday AI
+Enables Friday to detect its own bugs, tracebacks, and tool exceptions,
 synthesize minimal surgical hotfixes, verify syntax in an isolated sandbox,
 safely apply patches with atomic rollback guarantees, and record changelogs.
 """
@@ -158,6 +158,8 @@ class SafetySandbox:
     @staticmethod
     def rollback_patch(patch_id: str) -> Dict[str, Any]:
         """Rolls back an applied patch by its ID."""
+        if getattr(__import__('sys'), 'frozen', False):
+            return {"success": False, "message": "Installed builds are updated through the Friday installer."}
         history = SafetySandbox._load_history()
         for entry in reversed(history):
             if entry.get("patch_id") == patch_id or patch_id == "latest":
@@ -237,6 +239,8 @@ class AutoHealEngine:
         Analyzes a traceback, pinpoints the root cause, synthesizes a patch,
         verifies AST syntax in memory, and safely applies it with backup.
         """
+        if getattr(__import__('sys'), 'frozen', False):
+            return {"success": False, "message": "Installed builds are updated with the Friday installer; source patching is disabled."}
         parsed = TracebackAnalyzer.parse(traceback_text)
         if not parsed.get("success"):
             return {
@@ -394,7 +398,7 @@ Do NOT include markdown fences outside the JSON. Return only the valid JSON obje
             try:
                 from google import genai
                 g_client = genai.Client(api_key=gemini_key, http_options={"api_version": "v1beta"})
-                for model_name in ("gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"):
+                for model_name in ("gemini-3.8-flash", "gemini-3.6-flash", "gemini-flash-latest"):
                     try:
                         resp = g_client.models.generate_content(
                             model=model_name,
@@ -466,6 +470,8 @@ def auto_heal(
     else:
         params = parameters or {}
     action = (params.get("action") or params.get("command") or "status").lower().strip()
+    if getattr(__import__('sys'), 'frozen', False) and action not in ("history", "log", "patches", "status"):
+        return "Source patching and rollback are disabled in installed builds. Install a newer Friday release."
 
     if action in ("history", "log", "patches"):
         patches = AutoHealEngine.get_patch_history(limit=5)

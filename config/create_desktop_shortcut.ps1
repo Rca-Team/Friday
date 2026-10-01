@@ -1,9 +1,11 @@
 $WshShell = New-Object -ComObject WScript.Shell
-$Shortcut = $WshShell.CreateShortcut('C:\Users\ravit\OneDrive\Desktop\Brahma Echo - Premium.lnk')
-$Shortcut.TargetPath = 'D:\TiTech Prabha Solution\Brahma AI\Brahma AI\Brahma-AI---Lite-main\Brahma-AI---Lite-main\.venv\Scripts\pythonw.exe'
-$Shortcut.Arguments = '"D:\TiTech Prabha Solution\Brahma AI\Brahma AI\Brahma-AI---Lite-main\Brahma-AI---Lite-main\main.py"'
-$Shortcut.WorkingDirectory = 'D:\TiTech Prabha Solution\Brahma AI\Brahma AI\Brahma-AI---Lite-main\Brahma-AI---Lite-main'
+$DesktopPath = [System.IO.Path]::Combine($env:USERPROFILE, "Desktop")
+$ShortcutPath = [System.IO.Path]::Combine($DesktopPath, "FRIDAY AI.lnk")
+$Shortcut = $WshShell.CreateShortcut($ShortcutPath)
+$Shortcut.TargetPath = "D:\codes\Friday\.venv\Scripts\pythonw.exe"
+$Shortcut.Arguments = '"D:\codes\Friday\main.py"'
+$Shortcut.WorkingDirectory = "D:\codes\Friday"
 $Shortcut.WindowStyle = 7
-$Shortcut.Description = 'Launch Brahma Echo - Premium'
-if ('D:\TiTech Prabha Solution\Brahma AI\Brahma AI\Brahma-AI---Lite-main\Brahma-AI---Lite-main\assets\Brahma_Lite_Logo.ico') { $Shortcut.IconLocation = 'D:\TiTech Prabha Solution\Brahma AI\Brahma AI\Brahma-AI---Lite-main\Brahma-AI---Lite-main\assets\Brahma_Lite_Logo.ico,0' }
+$Shortcut.Description = "Launch FRIDAY AI -- Created by Gaurav"
+$Shortcut.IconLocation = "D:\codes\Friday\assets\friday.ico,0"
 $Shortcut.Save()

@@ -14,6 +14,8 @@ from pathlib import Path
 from typing import Callable
 import xml.etree.ElementTree as ET
 import ctypes
+import sys
+import warnings
 from ctypes import wintypes
 
 import pyautogui
@@ -24,7 +26,14 @@ except Exception:  # pragma: no cover
     psutil = None
 
 try:
-    from pywinauto import Desktop
+    sys.coinit_flags = 2
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore",
+            message=r"Apply externally defined coinit_flags:.*",
+            category=UserWarning,
+        )
+        from pywinauto import Desktop
 except Exception:  # pragma: no cover
     Desktop = None
 
@@ -356,18 +365,21 @@ def _speak_edge_native(text: str) -> None:
     except Exception:
         pass
 
-    audio_path = os.path.join(tempfile.gettempdir(), f"brahma_edge_tts_{uuid.uuid4().hex}.mp3")
+    audio_path = os.path.join(tempfile.gettempdir(), f"friday_edge_tts_{uuid.uuid4().hex}.mp3")
     try:
-        # Use a male neural voice for app speech so daily briefing and alerts sound
-        # closer to Brahma's normal male audio output.
-        communicator = edge_tts.Communicate(text, voice="en-US-GuyNeural")
+        from memory import config_manager
+        voice_id = config_manager.get_tts_voice_id()
+    except Exception:
+        voice_id = "en-IE-EmilyNeural"
+    try:
+        communicator = edge_tts.Communicate(text, voice=voice_id)
         communicator.save_sync(audio_path)
     except Exception as exc:  # pragma: no cover
         print(f"[AttentionMonitor] Edge TTS generation failed: {exc}")
         _cleanup_current_audio()
         return
 
-    player_alias = f"brahma_tts_{uuid.uuid4().hex}"
+    player_alias = f"friday_tts_{uuid.uuid4().hex}"
     try:
         result = ctypes.windll.winmm.mciSendStringW(
             f'open "{audio_path}" type mpegvideo alias {player_alias}',
@@ -651,7 +663,7 @@ class AttentionMonitor:
                 continue
 
             hay = f"{title} {win.get('class') or ''} {proc_name}".lower()
-            if "brahma" in hay:
+            if "friday" in hay:
                 continue
 
             if app in {"Zoom", "Teams", "WhatsApp"} and _contains_any(hay, ("meeting", "call", "incoming", "ringing", "conference", "joined")):

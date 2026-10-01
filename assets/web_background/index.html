@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Brahma Echo 3D WebGL Living AI Background</title>
+  <title>FRIDAY AI 3D WebGL Living AI Background</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { width: 100%; height: 100%; overflow: hidden; background: #050505; }
@@ -969,7 +969,7 @@
     const dustPoints = new THREE.Points(dustGeo, dustMat);
     orbGroup.add(dustPoints);
 
-    // ——— REACTIVE BRAHMA ECHO STATE CONTROLLER ———
+    // ——— REACTIVE FRIDAY STATE CONTROLLER ———
     let currentState = "IDLE";
     let targetScale = 0.52;
     let currentScale = 0.52;
@@ -1001,10 +1001,10 @@
       if (v > liveAudioAmp) liveAudioAmp = v;
     };
 
-    window.setBrahmaState = function(state) {
+    window.setFridayState = function(state) {
       if (!state) return;
       currentState = String(state).toUpperCase();
-      console.log("Brahma Echo 3D StateChanged:", currentState);
+      console.log("FRIDAY 3D StateChanged:", currentState);
 
       const pal = STATE_COLORS[currentState] || STATE_COLORS.IDLE;
       targetColorHot = new THREE.Color(pal.hot);
@@ -1054,6 +1054,7 @@
         targetCameraZ = 7.6;
       }
     };
+    window.setBrahmaState = window.setFridayState;
 
     // CURSOR GAZE & SENTIENT TRACKING
     let mouseNormX = 0, mouseNormY = 0;

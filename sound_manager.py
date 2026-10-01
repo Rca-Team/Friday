@@ -1,6 +1,6 @@
 from core.user_paths import get_user_data_dir
 """
-Brahma Echo - Cinematic Holographic Sound Effects Subsystem
+Friday AI - Cinematic Holographic Sound Effects Subsystem
 Provides low-latency, non-blocking sci-fi acoustics for holographic UI interactions:
 - Holographic wing deploy / aperture whoosh
 - High-tech telemetry chirp
@@ -18,7 +18,7 @@ import json
 from pathlib import Path
 from typing import Optional
 
-from PyQt6.QtCore import QObject, QUrl
+from PyQt6.QtCore import QCoreApplication, QObject, QUrl
 from PyQt6.QtMultimedia import QSoundEffect
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -280,4 +280,29 @@ class SoundManager(QObject):
         self._play("listening_stop")
 
 
-sound_mgr = SoundManager.instance()
+class _DeferredSoundManager:
+    """Creates Qt multimedia objects only after the Qt application exists."""
+
+    def __init__(self):
+        object.__setattr__(self, "_manager", None)
+
+    def initialize(self) -> None:
+        if self._manager is None and QCoreApplication.instance() is not None:
+            object.__setattr__(self, "_manager", SoundManager.instance())
+
+    def __getattr__(self, name):
+        self.initialize()
+        if self._manager is not None:
+            return getattr(self._manager, name)
+        return lambda *args, **kwargs: None
+
+    def __setattr__(self, name, value):
+        if name == "_manager":
+            object.__setattr__(self, name, value)
+            return
+        self.initialize()
+        if self._manager is not None:
+            setattr(self._manager, name, value)
+
+
+sound_mgr = _DeferredSoundManager()

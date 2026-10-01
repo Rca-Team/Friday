@@ -1,5 +1,5 @@
 """
-Learned Rules Engine for Brahma AI
+Learned Rules Engine for Friday AI
 Enables continuous self-improvement by capturing user corrections, preferred behaviors,
 and habits, then injecting them dynamically into the core LLM prompt without modifying source code.
 """

@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Dict, Any, Optional
 
 _BASE_DIR = Path(__file__).resolve().parent.parent
-_CONFIG_DIR = _get_user_data_dir() / "config"
+_CONFIG_DIR = get_user_data_dir() / "config"
 _CACHE_FILE = _CONFIG_DIR / "device_location_cache.json"
 _SETTINGS_FILE = _CONFIG_DIR / "app_settings.json"
 
@@ -104,7 +104,7 @@ def _reverse_geocode_osm(lat: float, lon: float) -> Optional[str]:
     """Reverse geocodes coordinates using OpenStreetMap Nominatim."""
     try:
         url = f"https://nominatim.openstreetmap.org/reverse?format=json&lat={lat}&lon={lon}"
-        req = urllib.request.Request(url, headers={"User-Agent": "BrahmaAI-LocationEngine/1.0"})
+        req = urllib.request.Request(url, headers={"User-Agent": "FridayAI-LocationEngine/1.0"})
         with urllib.request.urlopen(req, timeout=3.0) as resp:
             data = json.loads(resp.read().decode("utf-8"))
             addr = data.get("address", {})

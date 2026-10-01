@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from actions import brahma_connect as bc
+from actions import friday_connect as bc
 
 
 class FakeService:
@@ -60,9 +60,9 @@ class FakeService:
         return {"success": True, "device": "android_001", "action": action, "data": {"ok": True}, "request_id": "req_1"}
 
     def create_pairing_offer(self, *, device_name: str = "Unknown Device", platform: str = "unknown"):
-        return {"service": "_BRAHMA._tcp.local.", "host": "192.168.1.20", "port": 8765, "pairing_token": "token", "pairing_code": "123456", "expires": 300}
+        return {"service": "_FRIDAY._tcp.local.", "host": "192.168.1.20", "port": 8765, "pairing_token": "token", "pairing_code": "123456", "expires": 300}
 
-    async def disconnect_device(self, target: str, *, reason: str = "Disconnected by Brahma"):
+    async def disconnect_device(self, target: str, *, reason: str = "Disconnected by Friday"):
         return {"success": True, "device": {"name": target}, "disconnected": True}
 
     async def approve_pending_request(self, pending_id: str):

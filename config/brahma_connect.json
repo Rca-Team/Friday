@@ -3,7 +3,7 @@
   "port": 8765,
   "enabled": true,
   "advertise": true,
-  "service_name": "_BRAHMA._tcp.local.",
+  "service_name": "_FRIDAY._tcp.local.",
   "pairing_ttl_seconds": 300,
   "request_timeout_seconds": 30
 }

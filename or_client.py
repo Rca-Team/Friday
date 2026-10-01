@@ -35,49 +35,36 @@ def _load_api_key() -> str:
 
 TEXT_MODELS: list[str] = [
     "nvidia/nemotron-3-super-120b-a12b:free",
-    "nousresearch/hermes-3-llama-3.1-405b:free",
-    "minimax/minimax-m2.5:free",
-    "meta-llama/llama-3.3-70b-instruct:free",
-    "qwen/qwen3-next-80b-a3b-instruct:free",
-    "qwen/qwen3-coder:free",
+    "qwen/qwen3.8-27b:free",
     "google/gemma-4-31b-it:free",
     "google/gemma-4-26b-a4b-it:free",
-    "google/gemma-3-27b-it:free",
-    "arcee-ai/trinity-large-preview:free",
-    "z-ai/glm-4.5-air:free",
-    "nvidia/nemotron-3-nano-30b-a3b:free",
-    "cognitivecomputations/dolphin-mistral-24b-venice-edition:free",
-    "google/gemma-3-12b-it:free",
-    "nvidia/nemotron-nano-12b-v2-vl:free",
-    "nvidia/nemotron-nano-9b-v2:free",
-    "google/gemma-3-4b-it:free",
-    "google/gemma-3n-e4b-it:free",
-    "meta-llama/llama-3.2-3b-instruct:free",
-    "google/gemma-3n-e2b-it:free",
-    "liquid/lfm-2.5-1.2b-instruct:free",
-    "liquid/lfm-2.5-1.2b-thinking:free",
+    "nvidia/nemotron-3.5-lightning:free",
+    "nvidia/nemotron-3-ultra-550b-a55b:free",
+    "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "inclusionai/ling-3.0-flash-sante:free",
+    "cohere/north-mini-code:free",
+    "thinkingmachines/inkling:free",
+    "liquid/lfm-2.5-2.6b:free",
 ]
 
 VISION_MODELS: list[str] = [
-    "nvidia/nemotron-nano-12b-v2-vl:free",
-    "nvidia/llama-nemotron-embed-vl-1b-v2:free",
-    "google/gemma-4-31b-it:free",
-    "google/gemma-4-26b-a4b-it:free",
-    "google/gemma-3n-e4b-it:free",
-    "google/gemma-3n-e2b-it:free",
-    "meta-llama/llama-3.3-70b-instruct:free",
-    "nvidia/nemotron-3-super-120b-a12b:free",
+    # OpenRouter keeps this router current and selects an image-capable free
+    # model. Do not pin retired provider model IDs here.
+    "openrouter/free",
 ]
 
 API_URL               = "https://openrouter.ai/api/v1/chat/completions"
 DEFAULT_MAX_TOKENS    = 4096
 DEFAULT_TEMPERATURE   = 0.7
-REQUEST_TIMEOUT       = 60   # seconds per request
-MAX_RETRIES_PER_MODEL = 2    # attempts before moving to next model
+REQUEST_TIMEOUT       = 20   # bounded wait per provider
+MAX_RETRIES_PER_MODEL = 1    # fail over instead of repeating a stalled request
 RETRY_DELAY           = 2    # seconds between retries
 RATE_LIMIT_COOLDOWN   = 60   # seconds before retrying a rate-limited model
+ACCESS_DENIED_COOLDOWN = 24 * 60 * 60
 
 _rate_limited: dict[str, float] = {}
+_access_denied: dict[str, float] = {}
+_last_pool_exhausted_at: float = 0.0
 
 class OpenRouterClient:
 
@@ -86,8 +73,8 @@ class OpenRouterClient:
         self._headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type":  "application/json",
-            "HTTP-Referer":  "https://github.com/brahma-ai",
-            "X-Title":       "Brahma Echo",
+            "HTTP-Referer":  "https://github.com/friday-ai",
+            "X-Title":       "Friday AI",
         }
 
     def _is_rate_limited(self, model: str) -> bool:
@@ -106,6 +93,19 @@ class OpenRouterClient:
             f"cooling down for {RATE_LIMIT_COOLDOWN}s"
         )
 
+    def _is_access_denied(self, model: str) -> bool:
+        ts = _access_denied.get(model)
+        if ts is None:
+            return False
+        if time.time() - ts > ACCESS_DENIED_COOLDOWN:
+            del _access_denied[model]
+            return False
+        return True
+
+    def _mark_access_denied(self, model: str) -> None:
+        _access_denied[model] = time.time()
+        logger.warning("[OpenRouter] Access denied for %s; skipping it for 24 hours.", model)
+
     def _call(
         self,
         model: str,
@@ -113,6 +113,7 @@ class OpenRouterClient:
         max_tokens: int = DEFAULT_MAX_TOKENS,
         temperature: float = DEFAULT_TEMPERATURE,
         response_format: Optional[dict] = None,
+        request_timeout: float = REQUEST_TIMEOUT,
     ) -> Optional[str]:
         payload: dict = {
             "model":       model,
@@ -134,7 +135,7 @@ class OpenRouterClient:
                     API_URL,
                     headers=self._headers,
                     json=payload,
-                    timeout=REQUEST_TIMEOUT,
+                    timeout=(min(5.0, request_timeout), request_timeout),
                 )
 
                 if resp.status_code == 401:
@@ -143,11 +144,9 @@ class OpenRouterClient:
                         "Check your API key in config/api_keys.json."
                     )
 
-                if resp.status_code == 403:
-                    raise PermissionError(
-                        f"[OpenRouter] Access denied for model {model} (HTTP 403). "
-                        "Check your account permissions and model access."
-                    )
+                if resp.status_code in (400, 403, 404):
+                    self._mark_access_denied(model)
+                    return None
 
                 if resp.status_code == 429:
                     self._mark_rate_limited(model)
@@ -189,6 +188,10 @@ class OpenRouterClient:
         temperature: float = DEFAULT_TEMPERATURE,
         response_format: Optional[dict] = None,
     ) -> str:
+        global _last_pool_exhausted_at
+        deadline = time.monotonic() + 45.0
+        if not model and time.time() - _last_pool_exhausted_at < RATE_LIMIT_COOLDOWN:
+            raise RuntimeError("[OpenRouter] Model pool is cooling down; try again shortly.")
         if model and not self._is_rate_limited(model):
             try:
                 result = self._call(model, messages, max_tokens, temperature, response_format)
@@ -202,14 +205,21 @@ class OpenRouterClient:
                 raise
 
         for m in pool:
-            if self._is_rate_limited(m):
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                break
+            if self._is_rate_limited(m) or self._is_access_denied(m):
                 continue
             logger.info(f"[OpenRouter] Trying: {m}")
-            result = self._call(m, messages, max_tokens, temperature, response_format)
+            result = self._call(
+                m, messages, max_tokens, temperature, response_format,
+                request_timeout=min(REQUEST_TIMEOUT, remaining),
+            )
             if result:
                 logger.info(f"[OpenRouter] ✓ Success: {m}")
                 return result
 
+        _last_pool_exhausted_at = time.time()
         raise RuntimeError(
             "[OpenRouter] All models failed or are rate-limited. "
             "Check your API key and network connection."
@@ -219,7 +229,7 @@ class OpenRouterClient:
         self,
         prompt: str,
         system: str = (
-            "You are a component of Brahma Echo, an open-source personal assistant. "
+            "You are a component of Friday AI, an open-source personal assistant. "
             "Be concise, helpful, and precise."
         ),
         history: Optional[list[dict]] = None,
@@ -342,6 +352,7 @@ class OpenRouterClient:
             "text_models":   TEXT_MODELS,
             "vision_models": VISION_MODELS,
             "rate_limited":  list(_rate_limited.keys()),
+            "access_denied": list(_access_denied.keys()),
             "total_text":    len(TEXT_MODELS),
             "total_vision":  len(VISION_MODELS),
         }
@@ -350,7 +361,7 @@ client = OpenRouterClient()
 
 if __name__ == "__main__":
     print("=" * 55)
-    print("  Brahma Echo — OpenRouter Client Self-Test")
+    print("  Friday AI — OpenRouter Client Self-Test")
     print("=" * 55)
 
     print("\n[TEST 1] Basic chat...")

@@ -14,15 +14,16 @@ $ErrorActionPreference = "Stop"
 $WorkingDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 Set-Location -Path $WorkingDir
 
-Write-Host "==========================================================================" -ForegroundColor Yellow
-Write-Host "  ____  ____      _    _   _ __  __    _      _    ___ " -ForegroundColor Yellow
-Write-Host " | __ )|  _ \    / \  | | | |  \/  |  / \    / \  |_ _|" -ForegroundColor Yellow
-Write-Host " |  _ \| |_) |  / _ \ | |_| | |\/| | / _ \  / _ \  | | " -ForegroundColor Yellow
-Write-Host " | |_) |  _ <  / ___ \|  _  | |  | |/ ___ \/ ___ \ | | " -ForegroundColor Yellow
-Write-Host " |____/|_| \_\/_/   \_\_| |_|_|  |_/_/   \_\_/   \_\___|" -ForegroundColor Yellow
+Write-Host "==========================================================================" -ForegroundColor Red
+Write-Host "  ______ _____  _____ _____             __     __" -ForegroundColor Red
+Write-Host " |  ____|  __ \|_   _|  __ \     /\     \ \   / /" -ForegroundColor Yellow
+Write-Host " | |__  | |__) | | | | |  | |   /  \     \ \_/ / " -ForegroundColor Yellow
+Write-Host " |  __| |  _  /  | | | |  | |  / /\ \     \   /  " -ForegroundColor Red
+Write-Host " | |    | | \ \ _| |_| |__| | / ____ \     | |   " -ForegroundColor Red
+Write-Host " |_|    |_|  \_\_____|_____/ /_/    \_\    |_|   " -ForegroundColor Yellow
 Write-Host ""
-Write-Host "                      PREMIUM LOADER" -ForegroundColor Green
-Write-Host "==========================================================================" -ForegroundColor Yellow
+Write-Host "              TACTICAL AI ASSISTANT -- CREATED BY GAURAV" -ForegroundColor Cyan
+Write-Host "==========================================================================" -ForegroundColor Red
 Write-Host ""
 
 # 2. Helper to refresh environment variables
@@ -90,7 +91,7 @@ Write-Host "Installing Playwright browsers..." -ForegroundColor Cyan
 Start-Process -FilePath $VenvPython -ArgumentList "-m playwright install" -Wait -NoNewWindow
 
 # 7. Launch App
-Write-Host "Starting Brahma AI..." -ForegroundColor Green
+Write-Host "Starting FRIDAY AI (Created by Gaurav)..." -ForegroundColor Red
 if (Test-Path $VenvPythonW) {
     Start-Process -FilePath $VenvPythonW -ArgumentList "main.py --startup" -WorkingDirectory $WorkingDir
 } else {

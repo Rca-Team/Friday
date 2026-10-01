@@ -175,7 +175,7 @@ def _send_email_via_browser(platform: str, receiver: str, message: str) -> str:
             except Exception:
                 continue
 
-        subject = "Message from Brahma Echo"
+        subject = "Message from Friday AI"
         
         plat_lower = platform.lower()
         if "gmail" in plat_lower or "chrome" in plat_lower or "browser" in plat_lower:

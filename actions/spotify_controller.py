@@ -1,7 +1,7 @@
 from core.user_paths import get_user_data_dir
 # actions/spotify_controller.py
 """
-Universal Music & Spotify Controller for Brahma AI.
+Universal Music & Spotify Controller for Friday AI.
 
 Guarantees 100% reliable music playback in Google Chrome, handles Spotify searches,
 direct track audio streaming, and global media key playback controls (play, pause, next, volume).
@@ -271,7 +271,7 @@ def spotify_controller(
             _open_url_in_chrome(direct_url)
             if player:
                 try:
-                    player.write_log(f"Brahma Echo: Playing '{query}' in Google Chrome")
+                    player.write_log(f"Friday AI: Playing '{query}' in Google Chrome")
                 except Exception:
                     pass
             return f"Playing '{query}' in Google Chrome."
@@ -294,5 +294,5 @@ def spotify_controller(
 
 
 def run(parameters: dict, player=None, session_memory=None) -> str:
-    """Plugin wrapper for Brahma architecture."""
+    """Plugin wrapper for Friday architecture."""
     return spotify_controller(parameters, player=player, session_memory=session_memory)

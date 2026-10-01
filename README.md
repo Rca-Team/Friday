@@ -1,7 +1,7 @@
 <div align="center">
-  <img src="assets/Brahma_Lite_Logo.png" alt="Brahma Echo" width="260" />
+  <img src="assets/friday_logo.png" alt="Friday AI" width="260" />
 
-  <h1>Brahma Echo</h1>
+  <h1>Friday AI</h1>
 
   <p><strong>Open-source Windows desktop AI assistant</strong></p>
   <p>Voice-first automation · contextual desktop intelligence · productivity workflows</p>
@@ -23,15 +23,15 @@
 
 ## Overview
 
-Brahma Echo is a premium Windows desktop assistant that combines voice and text control with automated workflows, screen-aware intelligence, and rich content generation.
+Friday AI is a premium Windows desktop assistant that combines voice and text control with automated workflows, screen-aware intelligence, and rich content generation.
 
-Designed for advanced desktop productivity, Brahma Echo delivers:
+Designed for advanced desktop productivity, Friday AI delivers:
 
 - Voice-first command and desktop automation
 - Application control, browser workflows, and file handling
 - Contextual screen inspection and adaptive task execution
 - Presentation, document, and report generation
-- Remote control via Discord and Brahma Connect
+- Remote control via Discord and Friday Connect
 
 ## Quick Highlights
 
@@ -51,7 +51,7 @@ Designed for advanced desktop productivity, Brahma Echo delivers:
 
 ## Key Benefits
 
-- Wake-word support for “Brahma Echo” and responsive assistant activation
+- Wake-word support for “Friday AI” and responsive assistant activation
 - Gemini 2.5 Flash-powered AI with OpenRouter fallback resilience
 - **Zero-Brick Autonomous Self-Patching**: In-memory AST sandbox with automatic `boot_sentry` recovery
 - **Continuous Learning Engine**: Permanent memory for user preferences and custom behaviors without code edits
@@ -59,7 +59,7 @@ Designed for advanced desktop productivity, Brahma Echo delivers:
 - Polished Qt interface with live status displays, hardware telemetry, and self-healing controls
 - Modular action architecture for clean extensibility and automation
 - Secure local configuration with file-based credential storage
-- Device pairing and remote routing through Brahma Connect
+- Device pairing and remote routing through Friday Connect
 
 ## Features & Complete Action Capabilities
 
@@ -75,8 +75,8 @@ Designed for advanced desktop productivity, Brahma Echo delivers:
 - **AST Safety Sandbox**: Candidate hotfixes are compiled in memory using Python's Abstract Syntax Tree (`ast.parse()`) and `py_compile` before touching disk.
 - **Native Google Gemini Synthesis**: Surgical hotfix generation using Gemini 2.5/2.0-Flash to fix edge cases, `KeyError`, `NoneType`, and boundary errors.
 - **Boot Sentry (Anti-Bricking Guarantee)**: Runs at startup before the UI or Gemini loads (`core/boot_sentry.py`). If a recent patch caused a startup crash, it automatically rolls back from `.bak` backup.
-- **One-Click & Voice Rollback**: Revert any patch instantly via *"Brahma, undo last patch"* or the UI settings card.
-- **Continuous Behavioral Learning**: Permanent rule storage (`config/learned_rules.json`) dynamically injected into `_load_system_prompt()` via `core/learned_rules.py` to personalize Brahma's behavior without modifying source code.
+- **One-Click & Voice Rollback**: Revert any patch instantly via *"Friday, undo last patch"* or the UI settings card.
+- **Continuous Behavioral Learning**: Permanent rule storage (`config/learned_rules.json`) dynamically injected into `_load_system_prompt()` via `core/learned_rules.py` to personalize Friday's behavior without modifying source code.
 - **Live Test Sandbox**: Includes `actions/test_action.py` and `test_self_heal.py` to test the complete self-repair and rollback lifecycle safely.
 
 ### 🖥️ Local OS Hardware & System Diagnostics MCP (0 Background Credits)
@@ -99,10 +99,10 @@ Designed for advanced desktop productivity, Brahma Echo delivers:
 - **Official Model Context Protocol Integration**: Directly interfaces with Microsoft's `@playwright/mcp` server over stdio JSON-RPC 2.0 (`actions/playwright_mcp_client.py`, `actions/browser_control.py`).
 - **24+ High-Level Browser Actions**: Full automation lifecycle including `browser_navigate`, `browser_click`, `browser_type`, `browser_fill_form`, `browser_snapshot`, `browser_screenshot`, `browser_evaluate`, and `browser_tabs`.
 - **Accessibility Tree Navigation**: Extracts structural accessibility trees instead of fragile pixel coordinates for robust, resilient interaction across dynamic web apps.
-- **Persistent Profile & Authentication**: Automatically manages session storage in `LOCALAPPDATA/BrahmaAI/PlaywrightProfile`, enabling persistent logins and headless/headed modes.
+- **Persistent Profile & Authentication**: Automatically manages session storage in `LOCALAPPDATA/FridayAI/PlaywrightProfile`, enabling persistent logins and headless/headed modes.
 
-### 📱 Brahma Connect & Android Remote Autopilot
-- **Local Network Pairing & Discovery**: Connects Android companion devices securely over local Wi-Fi with cryptographic pairing tokens (`actions/brahma_connect.py`).
+### 📱 Friday Connect & Android Remote Autopilot
+- **Local Network Pairing & Discovery**: Connects Android companion devices securely over local Wi-Fi with cryptographic pairing tokens (`actions/friday_connect.py`).
 - **Device Telemetry & Controls**: Query phone battery status, trigger flashlight, adjust media/call volume, fetch Wi-Fi state, and launch phone apps.
 - **Mobile Autopilot**: Remote device control using Android's native Accessibility Service to click, scroll, type, and automate actions on mobile (`actions/mobile_autopilot.py`).
 - **Clipboard & Notification Sync**: Seamlessly sync copied text and alerts between Windows and your phone.
@@ -123,9 +123,9 @@ Designed for advanced desktop productivity, Brahma Echo delivers:
 - **Spreadsheet & Office Builder**: Generates Excel spreadsheets `.xlsx` with calculated formulas and formatted reports (`actions/office_builder.py`, `actions/office_generator.py`).
 
 ### 💻 Autonomous Developer & Code Engineering
-- **Brahma Dev Agent**: Multi-step coding agent that reads repository code, authors files, runs scripts, and iterates on software tasks (`actions/brahma_dev_agent.py`, `actions/dev_agent.py`).
+- **Friday Dev Agent**: Multi-step coding agent that reads repository code, authors files, runs scripts, and iterates on software tasks (`actions/friday_dev_agent.py`, `actions/dev_agent.py`).
 - **Code Helper**: Debugs code syntax errors, writes algorithms, explains complex codebases, and refactors functions (`actions/code_helper.py`).
-- **Claude Code CLI Bridge**: Interoperability bridge to spawn and orchestrate Anthropic's Claude Code CLI tasks directly from Brahma (`actions/claude_code_bridge.py`).
+- **Claude Code CLI Bridge**: Interoperability bridge to spawn and orchestrate Anthropic's Claude Code CLI tasks directly from Friday (`actions/claude_code_bridge.py`).
 
 ### 💬 Social Media & Messaging Bridges
 - **Instagram AI Assistant**: Reads Instagram direct messages, sends alerts for incoming chats, and auto-replies conversationally using AI (`actions/instagram_mcp.py`, `actions/instagram_chat.py`).
@@ -164,7 +164,7 @@ Designed for advanced desktop productivity, Brahma Echo delivers:
 ### 🎨 Core UI & Acoustic Infrastructure
 - **Cinematic Floating Launcher**: Modern Qt interface featuring 3D cursor gaze tracking, audio visualizer, edge snapping, and theme customization (`ui.py`).
 - **Voice Pipeline & Interruption**: Ultra-low-latency voice activation, Gemini native voice synthesis, and true barge-in interruption (<50ms VAD) (`core/echo.py`).
-- **Global Hotkey Summon**: Windows-wide keyboard shortcut to summon Brahma instantly from any application (`core/hotkey.py`).
+- **Global Hotkey Summon**: Windows-wide keyboard shortcut to summon Friday instantly from any application (`core/hotkey.py`).
 - **Spatial Acoustic Sound Manager**: High-fidelity sound effects for listening cues, deployment whooshes, telemetry chirps, and mission completion (`sound_manager.py`).
 - **Safety Confirmations & Undo Framework**: Built-in confirmation guards for sensitive/destructive operations with undo support (`core/confirm.py`, `core/undo.py`).
 
@@ -182,8 +182,8 @@ Designed for advanced desktop productivity, Brahma Echo delivers:
 ### 1. Clone the repository
 
 ```powershell
-git clone https://github.com/titechprabhasolutions/Brahma-AI---Lite.git
-cd "Brahma AI - Lite"
+git clone https://github.com/titechprabhasolutions/Friday-AI---Lite.git
+cd "Friday AI"
 ```
 
 ### 2. Create and activate a virtual environment
@@ -229,7 +229,7 @@ Create `config/api_keys.json` with your keys:
 
 If you want Discord remote control, populate `config/discord_bot.json` with your bot credentials and connection settings.
 
-### 6. Launch Brahma Echo
+### 6. Launch Friday AI
 
 ```powershell
 python main.py
@@ -238,7 +238,7 @@ python main.py
 For a cleaner startup experience on Windows:
 
 ```powershell
-start_brahma.vbs
+start_friday.vbs
 ```
 
 ## Configuration
@@ -250,7 +250,7 @@ Core configuration files:
 - `config/learned_rules.json` — persistent user preferences, habits, and behavioral directives
 - `config/patch_history.json` — audit log of autonomous hotfixes and rollbacks
 - `config/patch_backups/` — automatic atomic file backups for instant rollback
-- `config/brahma_connect.json` — device pairing, gateway, and discovery settings
+- `config/friday_connect.json` — device pairing, gateway, and discovery settings
 - `config/discord_bot.json` — Discord bridge configuration
 
 ## Project Structure
@@ -272,7 +272,7 @@ Core configuration files:
 - `actions/desktop_organizer_mcp.py` — automated desktop decluttering with safe rollback
 - `actions/google_workspace_mcp.py` — native Gmail, Google Calendar, and Drive integration
 - `actions/playwright_mcp_client.py` & `actions/browser_control.py` — Microsoft @playwright/mcp client for 24+ browser automation actions
-- `actions/brahma_connect.py` & `actions/mobile_autopilot.py` — Android companion app gateway and remote mobile autopilot
+- `actions/friday_connect.py` & `actions/mobile_autopilot.py` — Android companion app gateway and remote mobile autopilot
 - `actions/screen_processor.py` — dynamic screenshot capture, active window inspection, and visual QA
 - `actions/attention_monitor.py` — camera-based attention tracking, eye contact, drowsiness, and posture alerts
 - `actions/pushup_counter.py` — computer-vision pushup and workout rep counter with live form feedback
@@ -281,7 +281,7 @@ Core configuration files:
 - `actions/docx_tools.py` — Microsoft Word `.docx` generator and editor
 - `actions/pdf_tools.py` — PDF merger, splitter, converter, and OCR text/table extractor
 - `actions/office_builder.py` & `actions/office_generator.py` — Excel spreadsheet `.xlsx` and office document generator
-- `actions/brahma_dev_agent.py` & `actions/dev_agent.py` — autonomous software engineering and debugging agent
+- `actions/friday_dev_agent.py` & `actions/dev_agent.py` — autonomous software engineering and debugging agent
 - `actions/code_helper.py` — code syntax debugger, algorithm generator, and refactoring assistant
 - `actions/claude_code_bridge.py` — Claude Code CLI execution bridge
 - `actions/instagram_mcp.py` & `actions/instagram_chat.py` — Instagram DM monitor and autonomous AI chat responder
@@ -305,7 +305,7 @@ Core configuration files:
 - `actions/weather_report.py` — real-time local and global weather forecasts
 - `actions/background_monitor.py` — autonomous crypto price, uptime, and RAM monitors
 - `actions/proactive.py` — spontaneous idle suggestions and wellness alerts
-- `brahma_connect/` — local gateway, pairing, and remote routing
+- `friday_connect/` — local gateway, pairing, and remote routing
 - `config/` — local settings, credentials, learned rules, and backups
 - `plugins/` — optional plugin extensions
 
@@ -314,8 +314,8 @@ Core configuration files:
 | Category | Voice / Text Command | Action / Capability |
 |---|---|---|
 | **Autonomous Self-Healing** | *"Trigger test bug"* | Triggers safe simulated error in `actions/test_action.py` |
-| **Autonomous Self-Healing** | *"Brahma, fix that bug"* | Synthesizes Gemini hotfix, runs AST verification, and patches code |
-| **Autonomous Self-Healing** | *"Brahma, undo last patch"* | Restores modified file from atomic `.bak` backup |
+| **Autonomous Self-Healing** | *"Friday, fix that bug"* | Synthesizes Gemini hotfix, runs AST verification, and patches code |
+| **Autonomous Self-Healing** | *"Friday, undo last patch"* | Restores modified file from atomic `.bak` backup |
 | **Autonomous Self-Healing** | *"Show patch history"* | Displays recent hotfixes, target files, and status |
 | **Continuous Learning** | *"Remember to always [rule]"* | Permanently commits behavioral directive into system prompt |
 | **Continuous Learning** | *"Show learned rules"* | Lists all active behavioral directives in memory |
@@ -330,7 +330,7 @@ Core configuration files:
 | **Google Workspace** | *"Read my unread emails"* | Retrieves and summarizes latest Gmail inbox messages |
 | **Google Workspace** | *"What is my schedule today?"* | Reads today's agenda from Google Calendar |
 | **Google Workspace** | *"Search Google Drive for quarterly deck"* | Finds documents stored on Google Drive |
-| **Android Phone Control** | *"Check phone battery"* | Fetches live phone battery status via Brahma Connect |
+| **Android Phone Control** | *"Check phone battery"* | Fetches live phone battery status via Friday Connect |
 | **Android Phone Control** | *"Turn on phone flashlight"* | Triggers mobile hardware flashlight remotely |
 | **Android Phone Control** | *"Launch YouTube on phone"* | Remotely opens app via mobile autopilot |
 | **Office & Documents** | *"Create a presentation on AI Agents"* | Builds a formatted multi-slide PowerPoint `.pptx` deck |
@@ -349,7 +349,7 @@ Core configuration files:
 | **Vision & Screen** | *"Start posture monitor"* | Monitors webcam for slouching and eye fatigue |
 | **Fitness & Nutrition** | *"Start pushup counter"* | Uses webcam vision to count workout reps with live form audio |
 | **Fitness & Nutrition** | *"Log 450 calories for grilled chicken"* | Logs meal and updates daily macro totals |
-| **Productivity & Routine** | *"Good morning Brahma"* / *"Daily briefing"* | Delivers spoken morning brief (weather, meetings, news) |
+| **Productivity & Routine** | *"Good morning Friday"* / *"Daily briefing"* | Delivers spoken morning brief (weather, meetings, news) |
 | **Productivity & Routine** | *"Start meeting assistant"* | Listens, transcribes, and formats meeting action items |
 | **Productivity & Routine** | *"Remind me in 25 minutes to take a break"* | Schedules audio and visual countdown reminder |
 | **Windows Control** | *"Lock my computer"* | Immediately locks the Windows workstation |
@@ -360,13 +360,13 @@ Core configuration files:
 
 ## Plugin System
 
-Extend Brahma Echo with custom Python plugins by adding files to `plugins/`.
+Extend Friday AI with custom Python plugins by adding files to `plugins/`.
 
 Supported hooks:
 
-- `on_brahma_created(brahma)` — called when the assistant instance is initialized
-- `on_startup(brahma)` — called after startup when plugins are registered
-- `on_text_command(text, source, brahma=None)` — called for each incoming text command; return `True` to indicate the command was handled
+- `on_friday_created(friday)` — called when the assistant instance is initialized
+- `on_startup(friday)` — called after startup when plugins are registered
+- `on_text_command(text, source, friday=None)` — called for each incoming text command; return `True` to indicate the command was handled
 
 ## Best Practices
 
@@ -387,4 +387,4 @@ This project is published under a custom source-available license. See `LICENSE`
 
 - User
 
-> Preserve attribution and keep credentials secure when building on top of Brahma Echo.
+> Preserve attribution and keep credentials secure when building on top of Friday AI.

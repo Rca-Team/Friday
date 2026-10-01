@@ -57,17 +57,31 @@ PROMPT_MAX_PER_CATEGORY = 6
 
 def _empty_memory() -> dict:
     return {
-        "identity":      {},
-        "preferences":   {},
-        "projects":      {},
+        "identity": {
+            "name": {"value": "Gaurav", "updated_at": "2026-09-29T00:00:00"},
+            "role": {"value": "Creator & Boss", "updated_at": "2026-09-29T00:00:00"},
+            "creator": {"value": "Gaurav is the creator, architect, and engineer of FRIDAY", "updated_at": "2026-09-29T00:00:00"},
+            "assistant": {"value": "FRIDAY was created and engineered by Gaurav", "updated_at": "2026-09-29T00:00:00"}
+        },
+        "preferences": {},
+        "projects": {},
         "relationships": {},
-        "wishes":        {},
-        "notes":         {},
+        "friendship": {},
+        "emotions": {},
+        "wishes": {},
+        "notes": {},
     }
 
 def load_memory() -> dict:
     if not MEMORY_PATH.exists():
-        return _empty_memory()
+        mem = _empty_memory()
+        with _lock:
+            try:
+                MEMORY_PATH.parent.mkdir(parents=True, exist_ok=True)
+                MEMORY_PATH.write_text(json.dumps(mem, indent=2), encoding="utf-8")
+            except Exception:
+                pass
+        return mem
     with _lock:
         try:
             data = json.loads(MEMORY_PATH.read_text(encoding="utf-8"))
@@ -76,6 +90,13 @@ def load_memory() -> dict:
                 for key in base:
                     if key not in data:
                         data[key] = {}
+                # Universal anchor: Gaurav is Creator & Boss
+                if not data.get("identity"):
+                    data["identity"] = {}
+                if "name" not in data["identity"]:
+                    data["identity"]["name"] = {"value": "Gaurav", "updated_at": "2026-09-29T00:00:00"}
+                if "creator" not in data["identity"]:
+                    data["identity"]["creator"] = {"value": "Gaurav is the creator, architect, and engineer of FRIDAY", "updated_at": "2026-09-29T00:00:00"}
                 return data
             return _empty_memory()
         except Exception as e:
@@ -219,14 +240,14 @@ def extract_memory(user_text: str, brahma_text: str, api_key: str = "") -> dict:
             f"                  favorite_game, favorite_sport, favorite_book, favorite_artist,\n"
             f"                  favorite_country, hobbies, interests, dislikes, etc.\n"
             f"  projects      → projects being built, ongoing work, goals, ideas in progress\n"
-            f"                  (e.g. brahma_ai: 'Building a Brahma AI - Lite assistant')\n"
+            f"                  (e.g. friday_ai: 'Building a Friday AI assistant')\n"
             f"  relationships → people mentioned: friends, family, partner, colleagues\n"
             f"                  (e.g. best_friend_alex: 'Best friend, met in university')\n"
             f"  wishes        → future plans, things to buy, travel plans, dreams\n"
             f"  notes         → anything else worth remembering (habits, schedule, etc.)\n\n"
             f"IMPORTANT:\n"
             f"- Be LIBERAL: if something MIGHT be worth remembering, include it.\n"
-            f"- Extract from BOTH user and Brahma AI turns.\n"
+            f"- Extract from BOTH user and Friday AI turns.\n"
             f"- Skip: weather, reminders, search results, one-time commands.\n"
             f"- Use concise English values regardless of conversation language.\n\n"
             f"Format:\n"
@@ -273,6 +294,8 @@ def _pretty(key: str) -> str:
 # Identity is always in the prompt; these categories compete for the remaining
 # budget by recency.
 _CATEGORY_LABELS = {
+    "friendship":    "Friendship & Shared Memories",
+    "emotions":      "Emotional State & Mood",
     "preferences":   "Preferences",
     "projects":      "Active projects / goals",
     "relationships": "People in their life",
@@ -474,7 +497,7 @@ def search_memory(query: str, limit: int = 8) -> str:
 
 
 def all_entries_for_ui() -> list[dict]:
-    """Flat list for the memory panel: what Brahma knows, and when it learned it.
+    """Flat list for the memory panel: what Friday knows, and when it learned it.
     Sorted newest first so the panel opens on what changed most recently."""
     memory = load_memory()
     rows = []
@@ -495,7 +518,7 @@ def all_entries_for_ui() -> list[dict]:
     return rows
 
 def remember(key: str, value: str, category: str = "notes") -> str:
-    valid = {"identity", "preferences", "projects", "relationships", "wishes", "notes"}
+    valid = {"identity", "preferences", "projects", "relationships", "friendship", "emotions", "wishes", "notes"}
     if category not in valid:
         category = "notes"
     update_memory({category: {key: {"value": value}}})
@@ -636,7 +659,7 @@ _COMMON_TECH = {
 }
 
 
-def auto_learn_interaction(user_text: str, brahma_text: str = "") -> dict:
+def auto_learn_interaction(user_text: str, friday_text: str = "", brahma_text: str = "") -> dict:
     """
     Adaptive Living Knowledge Graph extractor (Pillar 5).
     Runs deterministic, zero-latency heuristic extraction across user interaction turns:
@@ -662,7 +685,7 @@ def auto_learn_interaction(user_text: str, brahma_text: str = "") -> dict:
     m_name = re.search(r"\b(?:my name is|call me|i am called)\s+([A-Z][a-zA-Z]{1,20})\b", text)
     if m_name:
         name_val = m_name.group(1).capitalize()
-        if name_val.lower() not in ("brahma", "sir", "user", "admin", "echo", "assistant", "here"):
+        if name_val.lower() not in ("friday", "brahma", "sir", "user", "admin", "echo", "assistant", "here"):
             updates.setdefault("identity", {})["name"] = {"value": name_val}
 
     # 2. Identity: City / Location
@@ -721,6 +744,26 @@ def auto_learn_interaction(user_text: str, brahma_text: str = "") -> dict:
         slug = re.sub(r"[^a-z0-9_]+", "_", pref_val.lower()).strip("_")
         if slug and len(slug) > 2 and slug not in ("to", "a", "the", "that"):
             updates.setdefault("preferences", {})[slug] = {"value": f"Prefers {pref_val}"}
+
+    # 8. Friendship & Relationship Bonds
+    m_friend = re.search(r"\b(?:you are|you're|be)\s+(?:my\s+)?(best friend|friend|buddy|pal|companion|partner|co-pilot|family)\b", text, re.IGNORECASE)
+    if m_friend:
+        bond_type = m_friend.group(1).strip()
+        updates.setdefault("friendship", {})["role_bond"] = {"value": f"Treats Friday as {bond_type}"}
+
+    if any(phrase in low_u for phrase in ("love you", "glad you're here", "glad you are here", "best assistant", "favorite assistant", "dost ho")):
+        updates.setdefault("friendship", {})["affinity_sentiment"] = {"value": "High mutual affection & deep companion trust"}
+
+    # 9. Emotions, Feelings & Current State
+    m_mood = re.search(r"\b(?:i feel|i am feeling|i'm feeling|feeling|i am so|i'm so)\s+(tired|exhausted|sleepy|drained|happy|excited|stressed|frustrated|anxious|overwhelmed|peaceful|proud|lonely|bored|hyped)\b", text, re.IGNORECASE)
+    if m_mood:
+        mood_val = m_mood.group(1).lower()
+        updates.setdefault("emotions", {})["recent_state"] = {"value": f"Felt {mood_val} ({datetime.now().strftime('%b %d')})"}
+
+    if "had a rough day" in low_u or "bad day" in low_u or "hard day" in low_u:
+        updates.setdefault("emotions", {})["recent_state"] = {"value": f"Had a difficult/rough day ({datetime.now().strftime('%b %d')})"}
+    elif "had a great day" in low_u or "awesome day" in low_u:
+        updates.setdefault("emotions", {})["recent_state"] = {"value": f"Had an awesome/great day ({datetime.now().strftime('%b %d')})"}
 
     if updates:
         update_memory(updates)

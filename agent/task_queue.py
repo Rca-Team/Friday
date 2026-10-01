@@ -33,6 +33,7 @@ class Task:
     on_complete: Any        = field(compare=False, default=None)  
     cancel_flag: threading.Event = field(compare=False, default_factory=threading.Event)
     player:      Any        = field(compare=False, default=None)
+    project:     str        = field(compare=False, default="")
 
 
 class TaskQueue:
@@ -78,6 +79,7 @@ class TaskQueue:
         speak:       Callable | None = None,
         on_complete: Callable | None = None,
         player:      Any = None,
+        project:     str = "",
     ) -> str:
 
         task_id = str(uuid.uuid4())[:8]
@@ -89,6 +91,7 @@ class TaskQueue:
             speak       = speak,
             on_complete = on_complete,
             player      = player,
+            project     = project[:80],
         )
 
         with self._condition:
@@ -200,6 +203,11 @@ class TaskQueue:
                     print(f"[TaskQueue] ⚠️ on_complete callback error: {e}")
 
             print(f"[TaskQueue] ✅ Completed: [{task.task_id}]")
+            try:
+                from memory.task_chronicle import chronicle
+                chronicle.record(task.task_id, task.goal, task.status.value, result=task.result, project=getattr(task, "project", ""))
+            except Exception as exc:
+                print(f"[TaskQueue] ⚠️ Chronicle write error: {exc}")
 
         except Exception as e:
             with self._lock:
@@ -207,6 +215,11 @@ class TaskQueue:
                 task.error  = str(e)
                 self._active_count -= 1
             print(f"[TaskQueue] ❌ Failed: [{task.task_id}] {e}")
+            try:
+                from memory.task_chronicle import chronicle
+                chronicle.record(task.task_id, task.goal, task.status.value, error=str(e), project=getattr(task, "project", ""))
+            except Exception as chronicle_error:
+                print(f"[TaskQueue] ⚠️ Chronicle write error: {chronicle_error}")
 
         with self._condition:
             self._condition.notify()

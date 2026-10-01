@@ -11,9 +11,6 @@ import uuid
 from pathlib import Path
 from typing import Any
 
-import google.generativeai as genai
-
-
 def _base_dir() -> Path:
     return Path(__file__).resolve().parent
 
@@ -182,9 +179,9 @@ class WorkspaceStore:
             if limit and limit > 0:
                 messages = conn.execute(
                     """
-                    SELECT role, content, timestamp, attachments_json
+                    SELECT id, role, content, timestamp, attachments_json
                     FROM (
-                        SELECT role, content, timestamp, attachments_json, rowid
+                        SELECT id, role, content, timestamp, attachments_json, rowid
                         FROM messages
                         WHERE conversation_id = ?
                         ORDER BY timestamp DESC, rowid DESC
@@ -197,7 +194,7 @@ class WorkspaceStore:
             else:
                 messages = conn.execute(
                     """
-                    SELECT role, content, timestamp, attachments_json
+                    SELECT id, role, content, timestamp, attachments_json
                     FROM messages
                     WHERE conversation_id = ?
                     ORDER BY timestamp ASC, rowid ASC
@@ -212,6 +209,7 @@ class WorkspaceStore:
                 "pinned": bool(convo["pinned"]),
                 "messages": [
                     {
+                        "id": row["id"],
                         "role": row["role"],
                         "content": row["content"],
                         "timestamp": int(row["timestamp"]),
@@ -220,6 +218,7 @@ class WorkspaceStore:
                     for row in messages
                 ],
             }
+
 
     def conversation_has_messages(self, conversation_id: str) -> bool:
         if not conversation_id:
@@ -259,7 +258,7 @@ class WorkspaceStore:
                     f"Conversation:\n{full_text}"
                 )
                 response = client.models.generate_content(
-                    model="gemini-2.5-flash",
+                    model="gemini-3.8-flash",
                     contents=prompt,
                     config={"temperature": 0.5},
                 )
@@ -361,6 +360,22 @@ class WorkspaceStore:
             current = self.get_active_conversation_id()
             if current == conversation_id:
                 conn.execute("DELETE FROM state WHERE key = 'active_conversation_id'")
+
+    def delete_message(self, message_id: str) -> bool:
+        """Delete a single message by its UUID. Returns True if a row was deleted."""
+        with self._lock, self._connect() as conn:
+            cursor = conn.execute("DELETE FROM messages WHERE id = ?", (message_id,))
+            return cursor.rowcount > 0
+
+    def delete_messages_by_content(self, conversation_id: str, content: str) -> int:
+        """Delete messages matching content in a conversation. Returns rows deleted."""
+        with self._lock, self._connect() as conn:
+            cursor = conn.execute(
+                "DELETE FROM messages WHERE conversation_id = ? AND content = ?",
+                (conversation_id, _clean_text(content)),
+            )
+            return cursor.rowcount
+
 
     def append_message(
         self,

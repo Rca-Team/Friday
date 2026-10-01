@@ -23,7 +23,7 @@ class ErrorDecision(Enum):
     ABORT       = "abort"    
 
 
-ERROR_ANALYST_PROMPT = """You are the error recovery module of Brahma AI - Lite AI assistant.
+ERROR_ANALYST_PROMPT = """You are the error recovery module of Friday AI assistant.
 
 A task step has failed. Analyze the error and decide what to do.
 
@@ -79,7 +79,7 @@ def analyze_error(
             "user_message": str
         }
     """
-    import google.generativeai as genai
+    from core.gemini_client import GeminiModel
 
     if attempt >= max_attempts:
         print(f"[ErrorHandler] ⚠️ Max attempts reached for step {step.get('step')} — forcing replan")
@@ -91,9 +91,9 @@ def analyze_error(
             "user_message":  "Trying a different approach, sir."
         }
 
-    genai.configure(api_key=_get_api_key())
-    model = genai.GenerativeModel(
+    model = GeminiModel(
         model_name="gemini-3.1-flash-lite",
+        api_key=_get_api_key(),
         system_instruction=ERROR_ANALYST_PROMPT
     )
 
@@ -149,10 +149,9 @@ def generate_fix(step: dict, error: str, fix_suggestion: str) -> dict:
 
     Returns a modified step dict.
     """
-    import google.generativeai as genai
+    from core.gemini_client import GeminiModel
 
-    genai.configure(api_key=_get_api_key())
-    model = genai.GenerativeModel(model_name="gemini-3.1-flash-lite")
+    model = GeminiModel(model_name="gemini-3.1-flash-lite", api_key=_get_api_key())
 
     prompt = f"""A task step failed. Generate a replacement step.
 

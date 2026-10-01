@@ -1,6 +1,5 @@
 sounddevice
 google-genai
-google-generativeai
 pillow
 requests
 python-kasa
@@ -14,7 +13,6 @@ opencv-python
 numpy
 mediapipe
 mss
-Pillow
 psutil
 comtypes
 pycaw               
@@ -35,4 +33,8 @@ cryptography
 qrcode[pil]
 python-multipart
 PyQt6
+PyQt6-WebEngine
 edge-tts
+setuptools
+pyinstaller
+zeroconf

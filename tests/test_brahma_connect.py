@@ -1,13 +1,13 @@
 import asyncio
 from pathlib import Path
 
-from brahma_connect.gateway.command_router import CommandRouter
-from brahma_connect.gateway.device_manager import DeviceManager
-from brahma_connect.gateway.capability_manager import CapabilityManager
-from brahma_connect.gateway.models import DeviceRecord
-from brahma_connect.gateway.pairing import PairingManager
-from brahma_connect.gateway.protocol import ProtocolTypes, build_message, validate_message
-from brahma_connect.gateway.websocket import ConnectionHub
+from friday_connect.gateway.command_router import CommandRouter
+from friday_connect.gateway.device_manager import DeviceManager
+from friday_connect.gateway.capability_manager import CapabilityManager
+from friday_connect.gateway.models import DeviceRecord
+from friday_connect.gateway.pairing import PairingManager
+from friday_connect.gateway.protocol import ProtocolTypes, build_message, validate_message
+from friday_connect.gateway.websocket import ConnectionHub
 
 
 def test_protocol_message_has_required_fields():
@@ -53,7 +53,7 @@ def test_pairing_manager_returns_expiring_offer():
     pairing = PairingManager(ttl_seconds=120)
     offer = pairing.create_offer("192.168.1.20", 8765)
 
-    assert offer.service == "_BRAHMA._tcp.local."
+    assert offer.service == "_FRIDAY._tcp.local."
     assert offer.host == "192.168.1.20"
     assert len(offer.pairing_code) == 6
     assert pairing.get_offer(offer.pairing_token) is not None

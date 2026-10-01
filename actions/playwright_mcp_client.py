@@ -14,14 +14,14 @@ logger.setLevel(logging.INFO)
 
 
 def _get_app_data_dir() -> Path:
-    """Returns local app data directory for Brahma AI."""
+    """Returns local app data directory for Friday AI."""
     if platform.system() == "Windows":
         base = os.environ.get("LOCALAPPDATA")
         if base:
-            p = Path(base) / "BrahmaAI" / "PlaywrightProfile"
+            p = Path(base) / "FridayAI" / "PlaywrightProfile"
             p.mkdir(parents=True, exist_ok=True)
             return p
-    home = Path.home() / ".brahma_ai" / "playwright_profile"
+    home = Path.home() / ".friday_ai" / "playwright_profile"
     home.mkdir(parents=True, exist_ok=True)
     return home
 
@@ -74,6 +74,24 @@ class PlaywrightMCPClient:
             if self.headless:
                 cmd.append("--headless")
 
+            runtime = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent.parent / "packaging"))
+            node = runtime / "runtime" / "node.exe"
+            bundled = node.is_file()
+            env = os.environ.copy()
+            if bundled:
+                browser_root = runtime / "runtime" / "browsers"
+                executables = sorted(browser_root.glob("chromium-*/chrome-win*/chrome.exe"))
+                if not executables:
+                    raise RuntimeError("Bundled Chromium is missing. Reinstall Friday.")
+                cmd = [str(node), str(runtime / "node_modules" / "@playwright" / "mcp" / "cli.js"),
+                       "--browser=chromium", f"--executable-path={executables[0]}",
+                       f"--user-data-dir={self.user_data_dir}", "--caps=vision,pdf,devtools"]
+                if self.headless:
+                    cmd.append("--headless")
+                env["PLAYWRIGHT_BROWSERS_PATH"] = str(browser_root)
+            elif getattr(sys, "frozen", False):
+                raise RuntimeError("Bundled browser runtime is missing. Reinstall Friday.")
+
             logger.info(f"[PlaywrightMCP] Spawning MCP server: {' '.join(cmd)}")
 
             try:
@@ -83,7 +101,9 @@ class PlaywrightMCPClient:
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     text=True,
-                    shell=(platform.system() == "Windows"),
+                    shell=(platform.system() == "Windows" and not bundled),
+                    env=env,
+                    creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
                     bufsize=0,
                     encoding="utf-8",
                     errors="replace",
@@ -93,6 +113,7 @@ class PlaywrightMCPClient:
                 return False
 
             self._running = True
+            threading.Thread(target=self._drain_stderr, daemon=True, name="PlaywrightMCP-stderr").start()
             self._is_ready.clear()
             self._reader_thread = threading.Thread(
                 target=self._read_loop,
@@ -108,7 +129,7 @@ class PlaywrightMCPClient:
                     {
                         "protocolVersion": "2024-11-05",
                         "capabilities": {},
-                        "clientInfo": {"name": "brahma-ai", "version": "1.0.0"},
+                        "clientInfo": {"name": "friday-ai", "version": "1.0.0"},
                     },
                     timeout=30,
                 )
@@ -160,6 +181,12 @@ class PlaywrightMCPClient:
 
         self._running = False
         self._is_ready.clear()
+
+    def _drain_stderr(self):
+        proc = self._proc
+        if proc and proc.stderr:
+            for line in proc.stderr:
+                logger.debug("[PlaywrightMCP] %s", line.rstrip())
 
     def _send_notification(self, method: str, params: Optional[dict] = None) -> None:
         if not self.is_alive() or not self._proc or not self._proc.stdin:

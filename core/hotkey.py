@@ -45,12 +45,23 @@ _VK = {
     "ctrl": 0x11, "shift": 0x10, "alt": 0x12,
     "space": 0x20, "f8": 0x77, "f9": 0x78, "f10": 0x79,
     "capslock": 0x14, "insert": 0x2D,
+    "f": 0x46, "a": 0x41, "s": 0x53, "j": 0x4A, "z": 0x5A,
+    "v": 0x56,
 }
 
 # Qt key sequence text for the same chord, used by the windowed fallback.
 _QT_NAME = {"ctrl": "Ctrl", "shift": "Shift", "alt": "Alt", "space": "Space",
             "f8": "F8", "f9": "F9", "f10": "F10",
-            "capslock": "CapsLock", "insert": "Ins"}
+            "capslock": "CapsLock", "insert": "Ins",
+            "f": "F", "a": "A", "s": "S", "j": "J", "z": "Z",
+            "v": "V"}
+
+FRIDAY_ACTIVATION_CHORDS = (
+    ("alt", "v"),            # Voice Hotkey: Alt + V
+    ("ctrl", "shift", "v"),  # Voice Hotkey: Ctrl + Shift + V
+    ("ctrl", "shift", "f"),  # Friday Hotkey: Ctrl + Shift + F
+    ("alt", "f"),            # Friday Hotkey: Alt + F
+)
 
 _POLL_HZ = 30.0
 # A key has to be down this long before we call it speech. It stops a stray
@@ -171,3 +182,79 @@ class PushToTalk:
 
         self._set_held(False)
         self._scope = "window"
+
+
+class FridayActivationHotkey:
+    """Listens for global Friday activation hotkeys (Ctrl+Shift+F or Alt+F).
+    When pressed, immediately triggers `on_activate()`.
+    """
+
+    def __init__(self, on_activate: Callable[[], None], chords=FRIDAY_ACTIVATION_CHORDS):
+        self._on_activate = on_activate
+        self._chords = [tuple(c) for c in chords]
+        self._thread: threading.Thread | None = None
+        self._stop = threading.Event()
+        self._scope = "window"
+
+    @property
+    def label(self) -> str:
+        return " / ".join("+".join(_QT_NAME.get(k, k.title()) for k in chord) for chord in self._chords)
+
+    def start(self) -> str:
+        self.stop()
+        self._stop.clear()
+        if _OS == "Windows" and self._can_poll():
+            self._scope = "global"
+            self._thread = threading.Thread(
+                target=self._poll_loop, name="friday-activation-hotkey", daemon=True
+            )
+            self._thread.start()
+        else:
+            self._scope = "window"
+        return self._scope
+
+    def stop(self) -> None:
+        self._stop.set()
+        t, self._thread = self._thread, None
+        if t is not None and t.is_alive():
+            t.join(timeout=1.0)
+
+    def _can_poll(self) -> bool:
+        try:
+            import ctypes
+            ctypes.windll.user32.GetAsyncKeyState
+            for chord in self._chords:
+                if not all(k in _VK for k in chord):
+                    return False
+            return True
+        except Exception:
+            return False
+
+    def _poll_loop(self) -> None:
+        import ctypes
+        user32 = ctypes.windll.user32
+        chord_codes = [[_VK[k] for k in chord] for chord in self._chords]
+        period = 1.0 / _POLL_HZ
+        was_triggered = False
+
+        while not self._stop.is_set():
+            try:
+                # Triggered if all keys in ANY chord are held down
+                triggered = any(
+                    all(user32.GetAsyncKeyState(c) & 0x8000 for c in codes)
+                    for codes in chord_codes
+                )
+            except Exception:
+                break
+
+            if triggered and not was_triggered:
+                was_triggered = True
+                try:
+                    self._on_activate()
+                except Exception as e:
+                    print(f"[FRIDAY HOTKEY] Error during activation: {e}")
+            elif not triggered:
+                was_triggered = False
+
+            self._stop.wait(period)
+

@@ -1,5 +1,5 @@
 """
-Demonstration Action for Testing Brahma's Autonomous Self-Patching Engine.
+Demonstration Action for Testing Friday's Autonomous Self-Patching Engine.
 Contains an intentional edge-case bug (ZeroDivisionError) for live self-repair verification.
 """
 
@@ -11,4 +11,4 @@ def test_action(parameters: dict = None, player=None, speak=None, **kwargs):
     msg = f"Test action completed successfully with metric value: {metric_value}"
     if speak:
         speak(msg)
-    return msg
+    return msg

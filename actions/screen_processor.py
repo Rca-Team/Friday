@@ -3,28 +3,43 @@ import asyncio
 import base64
 import io
 import json
-import re
 import os
 import sys
 import time
 import threading
-import cv2
-import mss
-import mss.tools
-import sounddevice as sd
-import numpy as np
 from pathlib import Path
+from typing import Optional, Dict, Any
+
+import cv2
 
 try:
     import PIL.Image
+    import PIL.ImageGrab
     _PIL_OK = True
 except ImportError:
     _PIL_OK = False
 
+try:
+    import mss
+    import mss.tools
+except ImportError:
+    mss = None
+
+class _LivePlaceholder:
+    def is_ready(self) -> bool:
+        return False
+    def analyze(self, image_bytes: bytes, mime_type: str, user_text: str) -> None:
+        pass
+
+_live = _LivePlaceholder()
+
+def _ensure_started(player=None) -> None:
+    pass
+
 from google import genai
 from google.genai import types
 
-def get_base_dir():
+def get_base_dir() -> Path:
     if getattr(sys, "frozen", False):
         return Path(sys.executable).parent
     return Path(__file__).resolve().parent.parent
@@ -32,23 +47,19 @@ def get_base_dir():
 BASE_DIR        = get_base_dir()
 API_CONFIG_PATH = get_user_data_dir() / "config" / "api_keys.json"
 
-LIVE_MODEL          = "models/gemini-2.5-flash-native-audio-preview-12-2025"
-CHANNELS            = 1
-RECEIVE_SAMPLE_RATE = 24000
-CHUNK_SIZE          = 1024
-
-IMG_MAX_W = 640
-IMG_MAX_H = 360
-JPEG_Q    = 55
+IMG_MAX_W = 1280
+IMG_MAX_H = 720
+JPEG_Q    = 80
+_GEMINI_VISION_COOLDOWN_UNTIL = 0.0
 
 SYSTEM_PROMPT = (
-    "You are Brahma AI - Lite, an open-source assistant. "
-    "Analyze images with technical precision and intelligence. "
-    "Help the user in a way they can understand — don't be overly complex. "
-    "Be concise, smart, and helpful like Brahma AI, personal assistant to User. "
-    "Respond in maximum 2 short sentences. Speed is priority. "
-    "Address the user as 'sir' for a tone of respect. "
-    "Ask if the user needs any further help with their problem."
+    "You are FRIDAY, Gaurav's practical developer and robotics partner. Treat the image as private working context, "
+    "not as something to narrate. Infer what the user is trying to accomplish from their question, the active window, "
+    "and visible evidence. Lead with the answer, diagnosis, or next action—never open with phrases such as 'I see on "
+    "your screen' or a generic UI description. For errors, state the likely root cause, give the smallest concrete fix, "
+    "and name one verification step. For code or CAD/robotics work, give the decision or command the user needs now. "
+    "Only mention a visible detail when it proves the answer. Be direct, natural, and concise; do not invent text that "
+    "is not legible in the image."
 )
 
 
@@ -56,12 +67,19 @@ def _get_api_key() -> str:
     try:
         with open(API_CONFIG_PATH, "r", encoding="utf-8") as f:
             keys = json.load(f)
-        key = keys.get("gemini_api_key", "")
+        key = keys.get("gemini_api_key", "").strip()
         if not key:
             raise ValueError("gemini_api_key not found")
         return key
     except Exception as e:
         raise RuntimeError(f"Could not load API key: {e}")
+
+
+def _is_quota_error(exc: Exception) -> bool:
+    message = str(exc).lower()
+    return any(marker in message for marker in (
+        "resource_exhausted", "quota exceeded", "too many requests", "429", "rate limit",
+    ))
 
 
 def _get_camera_index() -> int:
@@ -73,407 +91,284 @@ def _get_camera_index() -> int:
     except Exception:
         pass
 
-    print("[Camera] [FIND] No camera index in config. Auto-detecting...")
-    best_index = 0
-
-    for idx in range(6):
+    for idx in range(4):
         cap = cv2.VideoCapture(idx, cv2.CAP_DSHOW)
         if not cap.isOpened():
             cap.release()
             continue
-        for _ in range(5):
-            cap.read()
         ret, frame = cap.read()
         cap.release()
-        if ret and frame is not None and frame.mean() > 5:
-            best_index = idx
-            print(f"[Camera] [OK] Camera found at index {idx} — saving to config.")
-            break
-        else:
-            print(f"[Camera] [WARN]  Index {idx}: no valid frame.")
-
-    try:
-        cfg = {}
-        if API_CONFIG_PATH.exists():
-            with open(API_CONFIG_PATH, "r", encoding="utf-8") as f:
-                cfg = json.load(f)
-        cfg["camera_index"] = best_index
-        with open(API_CONFIG_PATH, "w", encoding="utf-8") as f:
-            json.dump(cfg, f, indent=4)
-        print(f"[Camera] [SAVE] Camera index {best_index} saved to config.")
-    except Exception as e:
-        print(f"[Camera] [WARN]  Could not save camera index: {e}")
-
-    return best_index
-
-
-def _to_jpeg(img_bytes: bytes) -> bytes:
-    if not _PIL_OK:
-        return img_bytes
-    img = PIL.Image.open(io.BytesIO(img_bytes)).convert("RGB")
-    resample = getattr(PIL.Image, "Resampling", PIL.Image).BILINEAR
-    img.thumbnail([IMG_MAX_W, IMG_MAX_H], resample)
-    buf = io.BytesIO()
-    img.save(buf, format="JPEG", quality=JPEG_Q, optimize=False)
-    return buf.getvalue()
-
-
-def _capture_screenshot() -> bytes:
-    try:
-        if _PIL_OK:
-            from PIL import ImageGrab
-            img = ImageGrab.grab(all_screens=True).convert("RGB")
-            resample = getattr(PIL.Image, "Resampling", PIL.Image).BILINEAR
-            img.thumbnail([IMG_MAX_W, IMG_MAX_H], resample)
-            buf = io.BytesIO()
-            img.save(buf, format="JPEG", quality=JPEG_Q, optimize=False)
-            return buf.getvalue()
-        else:
-            raise RuntimeError("PIL not available")
-    except Exception as e:
-        print(f"[ScreenProcess] PIL ImageGrab failed ({e}). Falling back to mss.")
-        with mss.mss() as sct:
-            monitors = getattr(sct, "monitors", []) or []
-            if len(monitors) > 1:
-                monitor = monitors[1]
-            elif monitors:
-                monitor = monitors[0]
-            else:
-                raise RuntimeError("No monitors were detected for screen capture.")
-            shot = sct.grab(monitor)
-            png_bytes = mss.tools.to_png(shot.rgb, shot.size)
-        return _to_jpeg(png_bytes)
+        if ret and frame is not None:
+            return idx
+    return 0
 
 
 def _capture_camera() -> bytes:
     camera_index = _get_camera_index()
     cap = cv2.VideoCapture(camera_index, cv2.CAP_DSHOW)
     if not cap.isOpened():
-        raise RuntimeError(f"Camera could not be opened: index {camera_index}")
-    for _ in range(10):
+        raise RuntimeError(f"Camera could not be opened at index {camera_index}")
+    for _ in range(5):
         cap.read()
     ret, frame = cap.read()
     cap.release()
     if not ret or frame is None:
         raise RuntimeError("Could not capture camera frame.")
-    if _PIL_OK:
-        rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        img = PIL.Image.fromarray(rgb)
-        img.thumbnail([IMG_MAX_W, IMG_MAX_H], PIL.Image.BILINEAR)
-        buf = io.BytesIO()
-        img.save(buf, format="JPEG", quality=JPEG_Q, optimize=False)
-        return buf.getvalue()
-    _, buf = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, JPEG_Q])
+    ret, buf = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, JPEG_Q])
+    if not ret:
+        raise RuntimeError("Could not encode camera frame.")
     return buf.tobytes()
 
 
-class _LiveSession:
-
-    def __init__(self):
-        self._loop:      asyncio.AbstractEventLoop | None = None
-        self._thread:    threading.Thread | None          = None
-        self._session                                     = None
-        self._out_queue: asyncio.Queue | None             = None
-        self._audio_in:  asyncio.Queue | None             = None
-        self._ready:     threading.Event                  = threading.Event()
-        self._player                                      = None
-        self._send_lock: asyncio.Lock | None              = None
-
-    def start(self, player=None):
-        if self._thread and self._thread.is_alive():
-            return
-        self._player = player
-        self._thread = threading.Thread(
-            target=self._run_loop, daemon=True, name="VisionSessionThread"
-        )
-        self._thread.start()
-        ok = self._ready.wait(timeout=20)
-        if not ok:
-            raise RuntimeError("Vision session did not start within 20s.")
-        print("[ScreenProcess] [OK] Vision session ready (no mic)")
-
-    def _run_loop(self):
-        self._loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self._loop)
-        self._loop.run_until_complete(self._main())
-
-    async def _main(self):
-        self._out_queue = asyncio.Queue(maxsize=30)
-        self._audio_in  = asyncio.Queue()
-        self._send_lock = asyncio.Lock()
-
-        client = genai.Client(
-            api_key=_get_api_key(),
-            http_options={"api_version": "v1beta"}
-        )
-
-        config = types.LiveConnectConfig(
-            response_modalities=["AUDIO"],
-            output_audio_transcription={},
-            system_instruction=SYSTEM_PROMPT,
-            speech_config=types.SpeechConfig(
-                voice_config=types.VoiceConfig(
-                    prebuilt_voice_config=types.PrebuiltVoiceConfig(
-                        voice_name="Charon"
-                    )
-                )
-            ),
-        )
-
-        while True:
-            try:
-                print("[ScreenProcess] [CONNECT] Vision session connecting...")
-                async with client.aio.live.connect(model=LIVE_MODEL, config=config) as session:
-                    self._session = session
-                    self._ready.set()
-                    print("[ScreenProcess] [OK] Vision session connected")
-                    async with asyncio.TaskGroup() as tg:
-                        tg.create_task(self._send_loop())
-                        tg.create_task(self._recv_loop())
-                        tg.create_task(self._play_loop())
-            except Exception as e:
-                print(f"[ScreenProcess] [WARN] Disconnected: {e} — reconnecting...")
-                self._session = None
-                self._ready.clear()
-                await asyncio.sleep(2)
-                print("[ScreenProcess] [WARN] Reconnect attempt will retry")
-
-    async def _send_loop(self):
-        while True:
-            item = await self._out_queue.get()
-            if self._session:
-                image_bytes, mime_type, user_text = item
-                try:
-                    b64 = base64.b64encode(image_bytes).decode("utf-8")
-                    await self._session.send_client_content(
-                        turns={
-                            "parts": [
-                                {"inline_data": {"mime_type": mime_type, "data": b64}},
-                                {"text": user_text}
-                            ]
-                        },
-                        turn_complete=True
-                    )
-                    print("[ScreenProcess] [OK] Image sent")
-                except Exception as e:
-                    print(f"[ScreenProcess] [WARN] Send error: {e}")
-                    if self._player and hasattr(self._player, "set_scanning"):
-                        self._player.set_scanning(False, "")
-                        if hasattr(self._player, "write_log"):
-                            self._player.write_log("System Event: Failed to transmit screen to AI. Please check your internet connection or API key.")
-            else:
-                print("[ScreenProcess] [WARN] Session not ready, discarding message")
-                if self._player and hasattr(self._player, "set_scanning"):
-                    self._player.set_scanning(False, "")
-                    if hasattr(self._player, "write_log"):
-                        self._player.write_log("System Event: The AI Vision module is currently offline. It might be reconnecting.")
-
-    async def _recv_loop(self):
-        transcript_buf: list[str] = []
+def _capture_screen_robust(player=None) -> bytes:
+    """
+    4-Tier High-Reliability Screen Capture Pipeline:
+    1. UI Threadsafe QScreen Capture (best fidelity & DPI support on Windows)
+    2. Direct PyQt6 QScreen Capture
+    3. PIL ImageGrab
+    4. MSS Desktop Capture
+    """
+    # Tier 1: Try UI player capture
+    if player and hasattr(player, "capture_screen_bytes"):
         try:
-            async for response in self._session.receive():
-                if response.data:
-                    await self._audio_in.put(response.data)
-                sc = response.server_content
-                if not sc:
-                    continue
-
-                if sc.output_transcription and sc.output_transcription.text:
-                    chunk = sc.output_transcription.text.strip()
-                    if chunk:
-                        transcript_buf.append(chunk)
-
-                if sc.turn_complete:
-                    if transcript_buf and self._player:
-                        full = re.sub(r'\s+', ' ', " ".join(transcript_buf)).strip()
-                        if full:
-                            self._player.write_log(f"Brahma AI: {full}")
-                            print(f"[ScreenProcess] [MSG] {full}")
-                            if hasattr(self._player, "set_scanning"):
-                                self._player.set_scanning(False, "")
-                    transcript_buf = []
+            b = player.capture_screen_bytes()
+            if b and len(b) > 1000:
+                print(f"[ScreenProcess] Captured via UI engine ({len(b)} bytes)")
+                return b
         except Exception as e:
-            print(f"[ScreenProcess] [ERR] Recv error: {e}")
-            transcript_buf = []
-            if self._player and hasattr(self._player, "set_scanning"):
-                self._player.set_scanning(False, "")
-            await asyncio.sleep(0.3)
+            print(f"[ScreenProcess] UI capture failed: {e}")
 
-    async def _play_loop(self):
-        stream = sd.RawOutputStream(
-            samplerate=RECEIVE_SAMPLE_RATE,
-            channels=CHANNELS,
-            dtype="int16",
-            blocksize=CHUNK_SIZE,
-        )
-        stream.start()
+    # Tier 2: Direct PyQt6 QScreen Capture
+    try:
+        from PyQt6.QtWidgets import QApplication
+        from PyQt6.QtCore import QBuffer, QIODevice, Qt
+        app = QApplication.instance()
+        if not app:
+            app = QApplication(sys.argv)
+        screen = QApplication.primaryScreen()
+        if screen:
+            pixmap = screen.grabWindow(0)
+            if not pixmap.isNull():
+                pixmap = pixmap.scaled(IMG_MAX_W, IMG_MAX_H, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+                buf = QBuffer()
+                buf.open(QIODevice.OpenModeFlag.WriteOnly)
+                pixmap.save(buf, "JPEG", JPEG_Q)
+                data = bytes(buf.data().data())
+                if data and len(data) > 1000:
+                    print(f"[ScreenProcess] Captured via PyQt6 QScreen ({len(data)} bytes)")
+                    return data
+    except Exception as e:
+        print(f"[ScreenProcess] Direct QScreen capture failed: {e}")
+
+    # Tier 3: PIL ImageGrab
+    if _PIL_OK:
         try:
-            while True:
-                chunk = await self._audio_in.get()
-                await asyncio.to_thread(stream.write, chunk)
+            from PIL import ImageGrab
+            img = ImageGrab.grab(all_screens=True).convert("RGB")
+            img.thumbnail((IMG_MAX_W, IMG_MAX_H))
+            buf = io.BytesIO()
+            img.save(buf, format="JPEG", quality=JPEG_Q)
+            data = buf.getvalue()
+            if data and len(data) > 1000:
+                print(f"[ScreenProcess] Captured via PIL ImageGrab ({len(data)} bytes)")
+                return data
         except Exception as e:
-            print(f"[ScreenProcess] [ERR] Play error: {e}")
-            raise
-        finally:
-            stream.stop()
-            stream.close()
+            print(f"[ScreenProcess] PIL ImageGrab failed: {e}")
 
-    def analyze(self, image_bytes: bytes, mime_type: str, user_text: str):
-        import time
-        # Wait for the background thread to initialize the event loop
-        for _ in range(50):
-            if self._loop:
-                break
-            time.sleep(0.1)
-            
-        if not self._loop:
-            print("[ScreenProcess] [ERR] Failed to start async loop")
-            return
-        if not self._out_queue:
-            print("[ScreenProcess] [ERR] Out queue is not initialized")
-            return
-        print(f"[ScreenProcess] enqueueing payload: {len(image_bytes)} bytes, mime={mime_type}, text={user_text[:40]}")
-        asyncio.run_coroutine_threadsafe(
-            self._out_queue.put((image_bytes, mime_type, user_text)),
-            self._loop
-        )
+    # Tier 4: MSS
+    try:
+        import mss, mss.tools
+        with mss.mss() as sct:
+            monitors = sct.monitors
+            mon = monitors[1] if len(monitors) > 1 else monitors[0]
+            shot = sct.grab(mon)
+            raw = mss.tools.to_png(shot.rgb, shot.size)
+            if _PIL_OK:
+                img = PIL.Image.open(io.BytesIO(raw)).convert("RGB")
+                img.thumbnail((IMG_MAX_W, IMG_MAX_H))
+                buf = io.BytesIO()
+                img.save(buf, format="JPEG", quality=JPEG_Q)
+                return buf.getvalue()
+            return raw
+    except Exception as e:
+        print(f"[ScreenProcess] MSS capture failed: {e}")
 
-    def is_ready(self) -> bool:
-        return self._session is not None
+    return b""
 
 
-_live       = _LiveSession()
-_started    = False
-_start_lock = threading.Lock()
-
-
-def _ensure_started(player=None):
-    global _started
-    with _start_lock:
-        if not _started:
-            _live.start(player=player)
-            _started = True
-        elif player is not None:
-            _live._player = player
+def _capture_screenshot() -> bytes:
+    if mss is not None:
+        try:
+            with mss.mss() as sct:
+                monitors = sct.monitors
+                mon = monitors[1] if len(monitors) > 1 else monitors[0]
+                shot = sct.grab(mon)
+                raw = mss.tools.to_png(shot.rgb, shot.size)
+                if _PIL_OK:
+                    img = PIL.Image.open(io.BytesIO(raw)).convert("RGB")
+                    img.thumbnail((IMG_MAX_W, IMG_MAX_H))
+                    buf = io.BytesIO()
+                    img.save(buf, format="JPEG", quality=JPEG_Q)
+                    return buf.getvalue()
+                return raw
+        except Exception:
+            pass
+    return _capture_screen_robust()
 
 
 def screen_process(
-    parameters:     dict,
-    response:       str | None = None,
-    player=None,
-    session_memory=None,
-    image_bytes:    bytes | None = None,
-) -> bool:
-    user_text = (parameters or {}).get("text") or (parameters or {}).get("user_text", "")
-    user_text = (user_text or "").strip()
+    parameters: dict | None = None,
+    response: str | None = None,
+    player: Any = None,
+    session_memory: Any = None,
+    image_bytes: bytes | None = None,
+) -> Any:
+    """
+    Task-oriented Gemini Vision reasoning for FRIDAY AI. Captures the active
+    workspace only when the user asks a question that benefits from it, then
+    returns a diagnosis or an actionable answer instead of a screen narration.
+    """
+    global _GEMINI_VISION_COOLDOWN_UNTIL
+    params = parameters or {}
+    user_text = (params.get("text") or params.get("query") or params.get("prompt") or "").strip()
     if not user_text:
-        print("[ScreenProcess] [WARN] No user_text provided.")
-        return False
+        user_text = "What should I do next in the task currently open on my screen?"
 
-    angle = (parameters or {}).get("angle", "screen").lower().strip()
-    print(f"[ScreenProcess] angle={angle!r}  text={user_text!r}")
+    angle = str(params.get("angle") or "screen").lower().strip()
+    print(f"[ScreenProcess] Starting vision analysis: angle='{angle}', prompt='{user_text[:60]}'")
 
-    def _screen_failure(message: str) -> bool:
-        print(f"[ScreenProcess] [FAIL] {message}")
-        if player and hasattr(player, "update_task_workspace"):
+    # Show scanning pulse in Friday HUD
+    if player and hasattr(player, "set_scanning"):
+        try:
+            player.set_scanning(True, "SCANNING SCREEN...")
+        except Exception:
+            pass
+
+    try:
+        # 1. Capture Image
+        if angle == "camera":
+            img_data = _capture_camera()
+            mime_type = "image/jpeg"
+        elif angle in ("active_window", "window") or params.get("target") == "active_window":
+            from core.window_context import capture_active_window_screenshot
+            img_data = capture_active_window_screenshot() or _capture_screen_robust(player)
+            mime_type = "image/jpeg"
+        else:
+            img_data = image_bytes or _capture_screen_robust(player)
+            mime_type = "image/jpeg"
+
+        if _live is not None and getattr(_live, "is_ready", lambda: False)():
+            _live.analyze(img_data, mime_type, user_text)
+            if player and hasattr(player, "set_scanning"):
+                player.set_scanning(False, "")
+            return True
+
+        if not img_data or len(img_data) < 500:
+            err_msg = "Could not capture the screen. Please check display permissions."
+            print(f"[ScreenProcess] [FAIL] {err_msg}")
+            if player and hasattr(player, "set_scanning"):
+                player.set_scanning(False, "")
+            return err_msg
+
+        # 2. Enrich prompt with foreground window context
+        window_ctx = ""
+        if angle != "camera":
             try:
-                player.update_task_workspace(
-                    status="Screen analysis failed",
-                    output=message,
-                    percent=0,
-                )
+                from core.window_context import get_foreground_window_info
+                w_info = get_foreground_window_info()
+                if w_info and w_info.get("title"):
+                    w_title = w_info.get("title", "").strip()
+                    if w_title and "friday" not in w_title.lower():
+                        window_ctx = f"\n[User's Active Focused Window: '{w_title}']"
             except Exception:
                 pass
-        if player and hasattr(player, "write_log"):
-            player.write_log(f"System Event: {message}")
-        if player and hasattr(player, "set_scanning") and angle != "camera":
-            player.set_scanning(False, "")
-        return False
 
-    try:
-        _ensure_started(player=player)
-    except Exception as e:
-        import traceback; traceback.print_exc()
-        msg = f"[ScreenProcess] [ERR] Vision initialization failed: {e}"
-        print(msg)
-        return _screen_failure("Vision module failed to initialize. Check your internet connection and API key.")
+        full_prompt = (
+            f"{SYSTEM_PROMPT}\n{window_ctx}\n\n"
+            f"User request: {user_text}\n\n"
+            "Response format: Answer first. If this is an error, use: Cause: … / Fix now: … / Check: … . "
+            "If the user asks what to do, give the next best action and only the essential steps."
+        )
 
-    if player and hasattr(player, "set_scanning") and angle != "camera":
-        player.set_scanning(True, "SCANNING SCREEN")
-
-    try:
-        if angle == "camera":
-            image_bytes = _capture_camera()
-            mime_type   = "image/jpeg"
-            print("[ScreenProcess] [CAMERA] Camera captured")
-        elif angle in ("active_window", "window") or (parameters or {}).get("target") == "active_window":
-            from core.window_context import capture_active_window_screenshot
-            image_bytes = capture_active_window_screenshot()
-            if not image_bytes:
-                image_bytes = _capture_screenshot()
-            mime_type = "image/jpeg"
-            print("[ScreenProcess] [WINDOW] Active window captured")
+        # 3. Vision Analysis via Gemini. A quota failure applies to the project,
+        # so do not waste additional requests cycling through equivalent models.
+        analysis_text = ""
+        gemini_quota_limited = time.time() < _GEMINI_VISION_COOLDOWN_UNTIL
+        if time.time() < _GEMINI_VISION_COOLDOWN_UNTIL:
+            print("[ScreenProcess] Gemini Vision quota cooldown active; using fallback.")
         else:
-            if image_bytes:
-                mime_type = "image/jpeg"
-                print("[ScreenProcess] [SCREEN] Using pre-captured UI screenshot")
-            else:
-                image_bytes = _capture_screenshot()
-                mime_type   = "image/jpeg" if _PIL_OK else "image/png"
-                print("[ScreenProcess] [SCREEN] Screen captured")
+            try:
+                api_key = _get_api_key()
+                client = genai.Client(api_key=api_key, http_options={"timeout": 20000})
+                for model_candidate in ("gemini-3.8-flash", "gemini-flash-latest"):
+                    try:
+                        resp = client.models.generate_content(
+                            model=model_candidate,
+                            contents=[types.Part.from_bytes(data=img_data, mime_type=mime_type), full_prompt],
+                            config={"max_output_tokens": 512},
+                        )
+                        if resp and resp.text:
+                            analysis_text = resp.text.strip()
+                            print(f"[ScreenProcess] Gemini ({model_candidate}) analysis complete.")
+                            break
+                    except Exception as model_error:
+                        if _is_quota_error(model_error):
+                            _GEMINI_VISION_COOLDOWN_UNTIL = time.time() + 60.0
+                            gemini_quota_limited = True
+                            print("[ScreenProcess] Gemini Vision quota reached; switching to fallback for 60 seconds.")
+                            break
+                        print(f"[ScreenProcess] Model {model_candidate} warning: {model_error}")
+            except Exception as api_err:
+                print(f"[ScreenProcess] Gemini Vision API error: {api_err}")
+
+        # 4. Fallback to OpenRouter Vision if Gemini fails
+        if not analysis_text:
+            try:
+                from or_client import client as orc
+                print("[ScreenProcess] Attempting OpenRouter vision fallback...")
+                # OpenRouter accepts a base64 string, not raw bytes. The former
+                # call passed its arguments in reverse order and could never
+                # serialize the image into the JSON request.
+                image_b64 = base64.b64encode(img_data).decode("ascii")
+                analysis_text = orc.vision(full_prompt, image_b64, mime_type, SYSTEM_PROMPT, max_tokens=512)
+            except Exception as or_err:
+                print(f"[ScreenProcess] OpenRouter vision fallback error: {or_err}")
+
+        if not analysis_text:
+            analysis_text = (
+                "Gemini Vision has reached this project's current quota, and the backup vision provider did not respond. "
+                "Wait for the Gemini quota to reset or check the OpenRouter Vision key in Settings → AI & Vision."
+                if gemini_quota_limited else
+                "I captured your screen, but the vision service could not generate an answer right now."
+            )
+
+        # 5. Update Friday UI Deliverables & Log
+        if player:
+            if hasattr(player, "set_scanning"):
+                player.set_scanning(False, "")
+            if hasattr(player, "write_log"):
+                player.write_log(f"Vision: {analysis_text[:120]}...")
+            if hasattr(player, "show_hud_deliverable"):
+                try:
+                    player.show_hud_deliverable(
+                        title="SCREEN VISION RECOGNITION",
+                        summary=analysis_text,
+                        file_path=None,
+                        kind="screen_process"
+                    )
+                except Exception:
+                    pass
+
+        return analysis_text
+
     except Exception as e:
-        import traceback; traceback.print_exc()
-        print(f"[ScreenProcess] [ERR] Capture error: {e}")
-        return _screen_failure("Failed to capture the screen. Please ensure the application has permission to capture your display.")
-
-    if not image_bytes:
-        print("[ScreenProcess] [ERR] No image bytes available for analysis.")
-        return _screen_failure("Screen capture returned empty data. Try again or restart the app.")
-
-    if not _live.is_ready():
-        print("[ScreenProcess] [ERR] Vision module is not ready to send image.")
-        return _screen_failure("Vision module is offline. It may still be reconnecting.")
-
-    # Enrich prompt with foreground window context if available
-    if angle != "camera":
-        try:
-            from core.window_context import get_foreground_window_info
-            w_info = get_foreground_window_info()
-            if w_info and w_info.get("title"):
-                w_title = w_info.get("title", "").strip()
-                w_class = w_info.get("class_name", "").strip()
-                if w_title and "brahma" not in w_title.lower():
-                    context_tag = f"\n[User's Active Focused Application: \"{w_title}\" (Class: {w_class})]"
-                    if context_tag not in user_text:
-                        user_text += context_tag
-                        print(f"[ScreenProcess] Injected window context: {w_title}")
-        except Exception as we:
-            print(f"[ScreenProcess] [WARN] Could not get foreground window context: {we}")
-
-    print(f"[ScreenProcess] [PKG] {len(image_bytes)} bytes → sending")
-    _live.analyze(image_bytes, mime_type, user_text)
-    return True
+        import traceback
+        traceback.print_exc()
+        if player and hasattr(player, "set_scanning"):
+            player.set_scanning(False, "")
+        return f"Screen recognition encountered an error: {e}"
 
 
 def warmup_session(player=None):
-    try:
-        _ensure_started(player=player)
-    except Exception as e:
-        print(f"[ScreenProcess] [WARN] Warmup error: {e}")
-
-
-if __name__ == "__main__":
-    print("[TEST] screen_processor.py v8 — image-only session")
-    print("=" * 50)
-    mode    = input("screen / camera (default: screen): ").strip().lower() or "screen"
-    request = input("Question (Enter for default): ").strip() or "What do you see? Be brief."
-
-    t0 = time.perf_counter()
-    warmup_session()
-    print(f"Session ready — {time.perf_counter()-t0:.2f}s\n")
-
-    t1     = time.perf_counter()
-    result = screen_process({"angle": mode, "text": request}, player=None)
-    print(f"Sent — {time.perf_counter()-t1:.3f}s | audio incoming...")
-    time.sleep(8)
-    print(f"\n{'[OK]' if result else '[ERR]'}")
+    """No-op warmup for backward compatibility."""
+    pass

@@ -9,6 +9,7 @@ class PluginManager:
         self.base_dir = Path(base_dir)
         self.plugins_dir = self.base_dir / "plugins"
         self.plugins: list[Any] = []
+        self.friday_ai = None
         self.brahma_echo = None
 
     def load_plugins(self) -> None:
@@ -33,15 +34,18 @@ class PluginManager:
             except Exception as exc:
                 print(f"[Plugins] Failed to load {p.name}: {exc}")
 
-    def register_brahma(self, brahma_obj) -> None:
-        self.brahma_echo = brahma_obj
+    def register_friday(self, friday_obj) -> None:
+        self.friday_ai = friday_obj
+        self.brahma_echo = friday_obj
         for p in list(self.plugins):
             try:
-                fn = getattr(p, "on_brahma_created", None)
+                fn = getattr(p, "on_friday_created", None) or getattr(p, "on_brahma_created", None)
                 if callable(fn):
-                    fn(brahma_obj)
+                    fn(friday_obj)
             except Exception as exc:
-                print(f"[Plugins] on_brahma_created error: {exc}")
+                print(f"[Plugins] on_friday_created error: {exc}")
+
+    register_brahma = register_friday
 
     def dispatch(self, hook: str, *args, **kwargs):
         """Call hook on plugins. If any plugin returns True, stop and return True."""
@@ -49,11 +53,14 @@ class PluginManager:
             try:
                 fn = getattr(p, hook, None)
                 if callable(fn):
-                    # call with brahma echo if plugin expects it
+                    # call with friday ai if plugin expects it
                     try:
-                        res = fn(*args, **kwargs, brahma_echo=self.brahma_echo)
+                        res = fn(*args, **kwargs, friday_ai=self.friday_ai, brahma_echo=self.friday_ai)
                     except TypeError:
-                        res = fn(*args, **kwargs)
+                        try:
+                            res = fn(*args, **kwargs, friday_ai=self.friday_ai)
+                        except TypeError:
+                            res = fn(*args, **kwargs)
                     if res is True:
                         return True
             except Exception as exc:

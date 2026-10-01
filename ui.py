@@ -45,7 +45,8 @@ except Exception:
 from discord_bot import DiscordBotService
 from gesture_utils import estimate_gesture_state, GestureTracker
 from smart_home import SmartHomeService
-from smart_home_page_new import BrahmaHomePage, _DeviceTile
+from smart_home_page_new import FridayHomePage, _DeviceTile
+BrahmaHomePage = FridayHomePage
 from workspace_store import store as workspace_store
 from core.identity import identity
 from sound_manager import sound_mgr
@@ -60,8 +61,8 @@ CONFIG_DIR = get_user_data_dir() / "config"
 API_FILE   = CONFIG_DIR / "api_keys.json"
 APP_SETTINGS_FILE = CONFIG_DIR / "app_settings.json"
 DISCORD_SETTINGS_FILE = CONFIG_DIR / "discord_bot.json"
-LOGO_FILE  = BASE_DIR / "assets" / "Brahma_Lite_Logo.png"
-LOGO_ICO   = BASE_DIR / "assets" / "Brahma_Lite_Logo.ico"
+LOGO_FILE  = BASE_DIR / "assets" / "friday_logo.png"
+LOGO_ICO   = BASE_DIR / "assets" / "friday.ico"
 BACKGROUND_IMAGE_FILE = BASE_DIR / "assets" / "background.png"
 MODEL_DOWNLOAD_URL = "https://storage.googleapis.com/mediapipe-assets/hand_landmarker.task"
 
@@ -74,27 +75,31 @@ _OS = platform.system()  # "Windows" | "Darwin" | "Linux"
 
 
 class C:
-    BG        = "#020305"
-    PANEL     = "#07080b"
-    PANEL2    = "#0d0f14"
-    BORDER    = "rgba(255, 179, 0, 0.15)"
-    BORDER_B  = "rgba(255, 179, 0, 0.25)"
-    BORDER_A  = "rgba(255, 179, 0, 0.18)"
-    PRI       = "#ffb300"
-    PRI_DIM   = "#e6a100"
-    PRI_GHO   = "rgba(255, 179, 0, 0.15)"
-    ACC       = "#ffb300"
-    ACC2      = "#ffe066"
-    GREEN     = "#37ff5f"
-    GREEN_D   = "#1dcc43"
-    RED       = "#ff3b30"
-    MUTED_C   = "#ffb300"
-    TEXT      = "#f4f6f8"
-    TEXT_DIM  = "#8e949d"
-    TEXT_MED  = "#c5cad2"
-    WHITE     = "#ffffff"
-    DARK      = "#000000"
-    BAR_BG    = "#222222"
+    BG          = "#08090C"
+    PANEL       = "rgba(18, 22, 34, 0.72)"
+    PANEL2      = "rgba(26, 32, 48, 0.60)"
+    GLASS_BG    = "rgba(16, 20, 30, 0.68)"
+    GLASS_PANEL = "rgba(22, 28, 42, 0.72)"
+    GLASS_BORDER = "rgba(255, 255, 255, 0.09)"
+    GLASS_BORDER_LIGHT = "rgba(255, 255, 255, 0.16)"
+    BORDER      = "rgba(255, 255, 255, 0.09)"
+    BORDER_B    = "rgba(255, 255, 255, 0.12)"
+    BORDER_A    = "rgba(10, 132, 255, 0.32)"
+    PRI         = "#0A84FF"
+    PRI_DIM     = "#0062CC"
+    PRI_GHO     = "rgba(10, 132, 255, 0.14)"
+    ACC         = "#5AC8FA"
+    ACC2        = "#8AD8FA"
+    GREEN       = "#30D158"
+    GREEN_D     = "#24A143"
+    RED         = "#FF453A"
+    MUTED_C     = "#8E8E93"
+    TEXT        = "#F5F5F7"
+    TEXT_DIM    = "#8E8E93"
+    TEXT_MED    = "#C7C7CC"
+    WHITE       = "#FFFFFF"
+    DARK        = "#000000"
+    BAR_BG      = "rgba(14, 18, 28, 0.75)"
     _listeners: list = []
 
     @classmethod
@@ -111,10 +116,12 @@ class C:
     def load_theme(cls, theme_hex: str):
         if not theme_hex.startswith("#") or len(theme_hex) != 7:
             # Fallback to predefined colors if it's not a hex or just a word
-            if theme_hex.lower() == "blue": theme_hex = "#007aff"
-            elif theme_hex.lower() == "green": theme_hex = "#37ff5f"
-            elif theme_hex.lower() == "red": theme_hex = "#ff3b30"
-            else: theme_hex = "#ffb300"
+            if theme_hex.lower() == "blue": theme_hex = "#0a84ff"
+            elif theme_hex.lower() == "green": theme_hex = "#30d158"
+            elif theme_hex.lower() == "cyan": theme_hex = "#00e5ff"
+            elif theme_hex.lower() == "gold": theme_hex = "#e5a938"
+            elif theme_hex.lower() == "red": theme_hex = "#ff453a"
+            else: theme_hex = "#0a84ff"
             
         import colorsys
         try:
@@ -122,8 +129,8 @@ class C:
             g = int(theme_hex[3:5], 16)
             b = int(theme_hex[5:7], 16)
         except Exception:
-            r, g, b = 255, 179, 0
-            theme_hex = "#ffb300"
+            r, g, b = 10, 132, 255
+            theme_hex = "#0a84ff"
             
         h, l, s = colorsys.rgb_to_hls(r/255.0, g/255.0, b/255.0)
         
@@ -139,13 +146,13 @@ class C:
 
         cls.PRI       = theme_hex
         cls.PRI_DIM   = hex_dim
-        cls.PRI_GHO   = f"rgba({r}, {g}, {b}, 0.15)"
-        cls.ACC       = theme_hex
+        cls.PRI_GHO   = f"rgba({r}, {g}, {b}, 0.14)"
+        cls.ACC       = "#5AC8FA" if theme_hex.lower() in ("#0a84ff", "#007aff") else theme_hex
         cls.ACC2      = hex_light
-        cls.MUTED_C   = theme_hex
-        cls.BORDER    = f"rgba({r}, {g}, {b}, 0.15)"
-        cls.BORDER_B  = f"rgba({r}, {g}, {b}, 0.25)"
-        cls.BORDER_A  = f"rgba({r}, {g}, {b}, 0.18)"
+        cls.MUTED_C   = "#8E8E93"
+        cls.BORDER    = f"rgba({r}, {g}, {b}, 0.18)"
+        cls.BORDER_B  = "rgba(255, 255, 255, 0.12)"
+        cls.BORDER_A  = f"rgba({r}, {g}, {b}, 0.28)"
 
         for cb in list(cls._listeners):
             try:
@@ -157,7 +164,21 @@ try:
     if APP_SETTINGS_FILE.exists():
         with open(APP_SETTINGS_FILE, "r", encoding="utf-8") as f:
             _global_settings = json.load(f)
-            C.load_theme(_global_settings.get("app_theme", "#ffb300"))
+            # If Stark theme-sync is active, apply design color instead of manual app_theme
+            _stark_sync = bool(_global_settings.get("stark_theme_sync_enabled", True))
+            _stark_key = str(_global_settings.get("stark_design", "nanotech") or "nanotech").strip().lower()
+            _STARK_COLORS = {
+                "nanotech":  "#00E5FF",
+                "mark_3":    "#E03E3E",
+                "hulkbuster": "#FF9500",
+                "edith":     "#0A84FF",
+                "stealth":   "#8E9CA8",
+                "palladium": "#E59838",
+            }
+            if _stark_sync and _stark_key in _STARK_COLORS:
+                C.load_theme(_STARK_COLORS[_stark_key])
+            else:
+                C.load_theme(_global_settings.get("app_theme", "#0A84FF"))
 except Exception:
     pass
 
@@ -196,6 +217,13 @@ class BackgroundWidget(QWidget):
                 path = Path(image_path)
                 if path.exists():
                     self._fallback_pixmap = QPixmap(str(path))
+            except Exception:
+                self._fallback_pixmap = None
+        if not self._fallback_pixmap:
+            try:
+                logo_path = BASE_DIR / "assets" / "friday_logo.png"
+                if logo_path.exists():
+                    self._fallback_pixmap = QPixmap(str(logo_path))
             except Exception:
                 self._fallback_pixmap = None
         self._web_view = None
@@ -275,7 +303,7 @@ class BackgroundWidget(QWidget):
                 st = (state or "IDLE").strip().replace("'", "\\'")
                 page = self._web_view.page()
                 if page:
-                    page.runJavaScript(f"if(window.setBrahmaState) window.setBrahmaState('{st}');")
+                    page.runJavaScript(f"if(window.setFridayState) window.setFridayState('{st}'); else if(window.setBrahmaState) window.setBrahmaState('{st}');")
             except Exception:
                 pass
 
@@ -307,19 +335,40 @@ class BackgroundWidget(QWidget):
     def paintEvent(self, event):
         if not self._web_view:
             painter = QPainter(self)
+            painter.setRenderHint(QPainter.RenderHint.Antialiasing)
             rect = self.rect()
+
+            # 1. Sleek tactical Iron Man dark titanium backdrop
+            grad = QRadialGradient(float(rect.center().x()), float(rect.center().y()), float(max(rect.width(), rect.height())) * 0.65)
+            grad.setColorAt(0.0, QColor(24, 14, 18))       # Deep crimson center warmth
+            grad.setColorAt(0.5, QColor(14, 15, 20))       # Dark titanium
+            grad.setColorAt(1.0, QColor(7, 8, 11))         # Deep space black
+            painter.fillRect(rect, grad)
+
+            # 2. Subtle Arc Reactor HUD circles
+            cx, cy = rect.center().x(), rect.center().y()
+            pen_gold = QPen(QColor(255, 193, 7, 24), 1, Qt.PenStyle.DashLine)
+            painter.setPen(pen_gold)
+            painter.setBrush(Qt.BrushStyle.NoBrush)
+            painter.drawEllipse(QPoint(cx, cy), 150, 150)
+            painter.drawEllipse(QPoint(cx, cy), 210, 210)
+
+            pen_cyan = QPen(QColor(0, 229, 255, 18), 1)
+            painter.setPen(pen_cyan)
+            painter.drawEllipse(QPoint(cx, cy), 270, 270)
+
+            # 3. Metallic Friday Logo in Center
             if self._fallback_pixmap and not self._fallback_pixmap.isNull():
-                painter.fillRect(rect, QColor(0, 0, 0))
-                scaled = self._fallback_pixmap.scaled(
-                    rect.size(),
-                    Qt.AspectRatioMode.KeepAspectRatioByExpanding,
-                    Qt.TransformationMode.SmoothTransformation,
-                )
-                x = rect.x() + (rect.width() - scaled.width()) // 2
-                y = rect.y() + (rect.height() - scaled.height()) // 2
-                painter.drawPixmap(x, y, scaled)
-            else:
-                painter.fillRect(rect, QColor(0, 0, 0))
+                target_size = min(300, rect.width() - 80, rect.height() - 80)
+                if target_size > 60:
+                    scaled = self._fallback_pixmap.scaled(
+                        target_size, target_size,
+                        Qt.AspectRatioMode.KeepAspectRatio,
+                        Qt.TransformationMode.SmoothTransformation,
+                    )
+                    x = cx - scaled.width() // 2
+                    y = cy - scaled.height() // 2 - 25
+                    painter.drawPixmap(x, y, scaled)
             painter.end()
             return
         super().paintEvent(event)
@@ -373,7 +422,7 @@ class RemoteKeyOverlay(QWidget):
         title.setStyleSheet("color: #ffffff; background: transparent; border: none;")
         lay.addWidget(title)
 
-        subtitle = QLabel("Scan the QR code with your phone to remotely control Brahma Echo.")
+        subtitle = QLabel("Scan the QR code with your phone to remotely control Friday.")
         subtitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
         subtitle.setWordWrap(True)
         subtitle.setFont(QFont("Segoe UI", 9))
@@ -529,7 +578,7 @@ class RemoteKeyOverlay(QWidget):
         self._qr_label.setText("OK")
         self._qr_label.setFont(QFont("Segoe UI", 34, QFont.Weight.Black))
         self._qr_label.setStyleSheet("color: #37ff5f; background: #041006; border-radius: 12px;")
-        self._timer_lbl.setText("Phone connected. Brahma Echo remote is ready.")
+        self._timer_lbl.setText("Phone connected. Friday remote is ready.")
 
     def _refresh_key(self):
         if not self._on_new_key:
@@ -622,7 +671,7 @@ class DailyBriefingOverlay(QWidget):
         hdr_info = QVBoxLayout()
         hdr_info.setSpacing(2)
 
-        title_lbl = QLabel("⚡ BRAHMA INTELLIGENCE // UNIFIED MORNING BRIEFING")
+        title_lbl = QLabel("⚡ FRIDAY INTELLIGENCE // UNIFIED MORNING BRIEFING")
         title_lbl.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
         title_lbl.setStyleSheet(f"color: {C.PRI}; letter-spacing: 1.5px; background: transparent; border: none;")
         hdr_info.addWidget(title_lbl)
@@ -1105,7 +1154,7 @@ class MemoryInspectorOverlay(QWidget):
 
         from memory.memory_manager import all_entries_for_ui
 
-        hdr = QLabel("🧠  WHAT BRAHMA REMEMBERS")
+        hdr = QLabel("🧠  WHAT FRIDAY REMEMBERS")
         hdr.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
         hdr.setStyleSheet(f"color: {C.PRI}; background: transparent; letter-spacing: 0.5px;")
         self._lay.addWidget(hdr)
@@ -1121,7 +1170,7 @@ class MemoryInspectorOverlay(QWidget):
 
         cap = QLabel(
             f"{len(rows)} stored memory entries. Stored locally in memory/long_term.json. "
-            f"Brahma recalls these during relevant conversations."
+            f"Friday recalls these during relevant conversations."
         )
         cap.setWordWrap(True)
         cap.setFont(QFont("Segoe UI", 8))
@@ -2012,6 +2061,10 @@ class GestureCameraPreview(QFrame):
                 model_dir = CONFIG_DIR / "models"
                 model_dir.mkdir(parents=True, exist_ok=True)
                 model_path = model_dir / "hand_landmarker.task"
+                bundled_model = BASE_DIR / "config" / "models" / "hand_landmarker.task"
+                if not model_path.exists() and bundled_model.is_file():
+                    import shutil
+                    shutil.copy2(bundled_model, model_path)
                 if not model_path.exists():
                     self._set_status("Downloading model", "searching")
                     if not self._download_hand_landmarker_model(model_path):
@@ -2076,6 +2129,27 @@ class GestureCameraPreview(QFrame):
             if action == "play_pause":
                 _press_media_key("playpause")
                 self._show_gesture_toast("✋ Air Gesture: Play / Pause")
+
+            elif action == "mute":
+                _press_media_key("volumemute")
+                self._show_gesture_toast("✊ Air Gesture: Mute / Silence Audio")
+
+            elif action == "summon_ai":
+                if hasattr(self, "_toggle_mute"):
+                    self._toggle_mute()
+                self._show_gesture_toast("🤘 Air Gesture: Summon Friday AI!")
+
+            elif action == "ok_confirm":
+                pyautogui.press("enter")
+                self._show_gesture_toast("👌 Air Gesture: Confirm (Enter)")
+
+            elif action == "scroll_up":
+                pyautogui.scroll(180)
+                self._show_gesture_toast("☝️ Air Gesture: Scroll Up")
+
+            elif action == "scroll_down":
+                pyautogui.scroll(-180)
+                self._show_gesture_toast("👇 Air Gesture: Scroll Down")
 
             elif action == "swipe_right":
                 # If tracking is inverted, swiping hand to user's right moves next
@@ -2394,6 +2468,10 @@ class TaskCard(QFrame):
         self.setObjectName("TaskCard")
         self._active = False
         self._workspace_locked = False
+        self._started_at = 0.0
+        self._busy_timer = QTimer(self)
+        self._busy_timer.setInterval(250)
+        self._busy_timer.timeout.connect(self._refresh_busy_time)
         self.setStyleSheet(
             f"""
             QFrame#TaskCard {{
@@ -2433,7 +2511,7 @@ class TaskCard(QFrame):
         self._command_lbl.setStyleSheet(f"color: {C.WHITE}; background: transparent;")
         lay.addWidget(self._command_lbl)
 
-        self._plan_lbl = QLabel("Plan: Brahma Echo will generate a task plan after you send a command.")
+        self._plan_lbl = QLabel("Plan: Friday will generate a task plan after you send a command.")
         self._plan_lbl.setWordWrap(True)
         self._plan_lbl.setFont(QFont("Segoe UI", 9))
         self._plan_lbl.setStyleSheet(f"color: {C.TEXT_MED}; background: transparent;")
@@ -2485,7 +2563,7 @@ class TaskCard(QFrame):
         self._title.setText(title)
         self._status_lbl.setText(desc)
         self._output_lbl.setText(desc)
-        self._plan_lbl.setText("Plan: Brahma Echo will generate a task plan after you send a command.")
+        self._plan_lbl.setText("Plan: Friday will generate a task plan after you send a command.")
         self._command_lbl.setText("Command: waiting for input")
         self._pct.setText(f"{percent}%")
         self._bar.setValue(max(0, min(100, percent)))
@@ -2507,12 +2585,19 @@ class TaskCard(QFrame):
         self._title.setText("Task Workspace")
         self._command_lbl.setText(f"Command: {command or 'waiting for input'}")
         self._plan_lbl.setText(self._format_plan(plan))
-        self._status_lbl.setText("Status: Planning task...")
-        self._output_lbl.setText("Output: Waiting for execution.")
-        self._pct.setText("8%")
-        self._bar.setValue(8)
+        self._status_lbl.setText("I'm working on it")
+        self._output_lbl.setText("I'll show the result here when it's ready.")
+        self._pct.setText("Working")
+        self._bar.setRange(0, 0)
+        self._started_at = time.monotonic()
+        self._busy_timer.start()
         self._foot.setText(f"Source: {source}")
-        # self.show() intentionally removed to prevent flashing on quick/normal chats
+        self.show()
+
+    def _refresh_busy_time(self):
+        if self._active and self.isVisible():
+            elapsed = int(time.monotonic() - self._started_at)
+            self._pct.setText(f"Working · {elapsed}s")
 
     def update_workspace(self, *, title: str | None = None, command: str | None = None, plan: list[str] | str | None = None,
                          status: str | None = None, output: str | None = None, percent: int | None = None,
@@ -2529,15 +2614,25 @@ class TaskCard(QFrame):
             self._output_lbl.setText(f"Output: {output}" if not output.lower().startswith("output:") else output)
         if percent is not None:
             pct = max(0, min(100, int(percent)))
-            self._pct.setText(f"{pct}%")
-            self._bar.setValue(pct)
-        self._foot.setText(footer)
+            # Intermediate estimates are not measured progress. Keep a real
+            # busy animation until the operation reports completion.
+            if pct < 100:
+                self._bar.setRange(0, 0)
+            else:
+                self._busy_timer.stop()
+                self._bar.setRange(0, 100)
+                self._pct.setText("Ready")
+                self._bar.setValue(100)
+        if footer is not None:
+            self._foot.setText(footer)
         self._active = True
         self._workspace_locked = False
         if percent is not None and int(percent) > 10:
             self.show()
 
     def finish_workspace(self, result: str, status: str = "Task completed.", percent: int = 100):
+        self._busy_timer.stop()
+        self._bar.setRange(0, 100)
         self._active = False
         self._workspace_locked = True
         self._title.setText("Task Complete")
@@ -2545,16 +2640,17 @@ class TaskCard(QFrame):
         self._output_lbl.setText(f"Output: {result or 'Done.'}")
         self._pct.setText(f"{max(0, min(100, percent))}%")
         self._bar.setValue(max(0, min(100, percent)))
-        self._foot.setText("Resetting workspace shortly...")
+        self._foot.setText("Result ready")
         self.show()
-        QTimer.singleShot(5000, self.clear_workspace)
 
     def clear_workspace(self):
+        self._busy_timer.stop()
+        self._bar.setRange(0, 100)
         self._active = False
         self._workspace_locked = False
         self._title.setText("Ready")
         self._command_lbl.setText("Command: waiting for input")
-        self._plan_lbl.setText("Plan: Brahma Echo will generate a task plan after you send a command.")
+        self._plan_lbl.setText("Plan: Friday will generate a task plan after you send a command.")
         self._status_lbl.setText("Status: Idle")
         self._output_lbl.setText("Output: Ready to work.")
         self._pct.setText("0%")
@@ -2770,12 +2866,17 @@ class ArtifactCard(QFrame):
 
 
 class ChatBubble(QFrame):
-    def __init__(self, role: str, name: str, text: str, stamp: str, attachments: list[dict] | None = None, parent=None, animate: bool = False):
+    delete_requested = pyqtSignal(str)  # message_id
+
+    def __init__(self, role: str, name: str, text: str, stamp: str,
+                 attachments: list[dict] | None = None, parent=None,
+                 animate: bool = False, message_id: str | None = None):
         super().__init__(parent)
         self._role = role
         self._full_text = text or ""
         self._typing_index = 0
         self._typing_timer: QTimer | None = None
+        self._message_id = message_id or ""
         self.setObjectName("ChatBubble")
         self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum)
         self.setMinimumHeight(1)
@@ -2787,9 +2888,9 @@ class ChatBubble(QFrame):
             self.setMinimumWidth(120)
 
         bg_style = (
-            "background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 rgba(20, 16, 12, 0.45), stop:1 rgba(10, 8, 5, 0.60)); border: 1px solid rgba(255, 179, 0, 0.25); border-radius: 16px;"
+            "background: rgba(22, 27, 40, 0.70); border: 1px solid rgba(255, 255, 255, 0.08); border-top: 1px solid rgba(255, 255, 255, 0.14); border-radius: 14px;"
             if role != "user"
-            else "background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 rgba(255, 179, 0, 0.22), stop:1 rgba(210, 140, 0, 0.32)); border: 1px solid rgba(255, 179, 0, 0.55); border-radius: 16px;"
+            else "background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 rgba(10, 132, 255, 0.28), stop:1 rgba(0, 102, 204, 0.35)); border: 1px solid rgba(10, 132, 255, 0.40); border-top: 1px solid rgba(255, 255, 255, 0.25); border-radius: 14px;"
         )
         self.setStyleSheet(f"QFrame#ChatBubble {{ {bg_style} }}")
 
@@ -2802,25 +2903,25 @@ class ChatBubble(QFrame):
         head.setSpacing(8)
 
         if role == "assistant":
-            avatar = _framed_logo(24, 24, bg="rgba(12,14,20,245)", border="rgba(255,179,0,0.50)", radius=12, inset=4)
+            avatar = _framed_logo(24, 24, bg="rgba(14, 18, 28, 240)", border="rgba(10, 132, 255, 0.45)", radius=12, inset=4)
             head.addWidget(avatar)
-            name_lbl = QLabel(name or "Brahma Echo")
+            name_lbl = QLabel(name or "Friday")
             name_lbl.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
-            name_lbl.setStyleSheet("color: #ffffff; background: transparent;")
+            name_lbl.setStyleSheet("color: #FFFFFF; background: transparent;")
             head.addWidget(name_lbl)
         elif role != "user":
             name_lbl = QLabel(name)
             name_lbl.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
-            name_lbl.setStyleSheet("color: #ffffff; background: transparent;")
+            name_lbl.setStyleSheet("color: #FFFFFF; background: transparent;")
             head.addWidget(name_lbl)
         elif role == "user":
             user_icon = QLabel("👤")
             user_icon.setFont(QFont("Segoe UI", 9))
-            user_icon.setStyleSheet("color: #ffb300; background: transparent;")
+            user_icon.setStyleSheet("color: #0A84FF; background: transparent;")
             head.addWidget(user_icon)
             name_lbl = QLabel(name or "You")
             name_lbl.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
-            name_lbl.setStyleSheet("color: #ffffff; background: transparent;")
+            name_lbl.setStyleSheet("color: #FFFFFF; background: transparent;")
             head.addWidget(name_lbl)
 
         head.addStretch()
@@ -2829,6 +2930,20 @@ class ChatBubble(QFrame):
         time_lbl.setFont(QFont("Segoe UI", 7))
         time_lbl.setStyleSheet("color: rgba(255,255,255,0.45); background: transparent;")
         head.addWidget(time_lbl)
+
+        # ── Delete button (hidden by default, shown on hover) ──────────
+        self._del_btn = QPushButton("🗑")
+        self._del_btn.setFixedSize(22, 22)
+        self._del_btn.setToolTip("Delete message")
+        self._del_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._del_btn.setStyleSheet(
+            "QPushButton { background: rgba(220,50,50,0.0); border: none; border-radius: 11px;"
+            " color: rgba(255,255,255,0.0); font-size: 11px; }"
+            "QPushButton:hover { background: rgba(220,50,50,0.85); color: #ffffff; }"
+        )
+        self._del_btn.hide()
+        self._del_btn.clicked.connect(self._on_delete_clicked)
+        head.addWidget(self._del_btn)
 
         outer.addLayout(head)
 
@@ -2851,6 +2966,32 @@ class ChatBubble(QFrame):
 
         if animate and role == "assistant":
             self._start_typing_animation()
+
+    def _on_delete_clicked(self):
+        if not self._message_id:
+            return
+        from PyQt6.QtWidgets import QMessageBox
+        msg = QMessageBox(self)
+        msg.setWindowTitle("Delete Message")
+        msg.setText("Delete this message?")
+        msg.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+        msg.setDefaultButton(QMessageBox.StandardButton.No)
+        msg.setStyleSheet(
+            "QMessageBox { background: #0a0b0e; color: #ffffff; }"
+            "QLabel { color: #ffffff; background: transparent; }"
+            "QPushButton { background: rgba(255,179,0,0.12); color: #ffb300; border: 1px solid rgba(255,179,0,0.35); border-radius: 6px; padding: 4px 16px; }"
+            "QPushButton:hover { background: rgba(255,179,0,0.28); }"
+        )
+        if msg.exec() == QMessageBox.StandardButton.Yes:
+            self.delete_requested.emit(self._message_id)
+
+    def enterEvent(self, event):
+        super().enterEvent(event)
+        self._del_btn.show()
+
+    def leaveEvent(self, event):
+        super().leaveEvent(event)
+        self._del_btn.hide()
 
     def _render_text(self, text: str, final: bool = True):
         self._browser.setText(_markdown_to_html(text or "", self._role))
@@ -2992,7 +3133,7 @@ class ConversationFeed(QScrollArea):
         lay = QVBoxLayout(frame)
         lay.setContentsMargins(14, 12, 14, 12)
         lay.setSpacing(10)
-        title = QLabel("Try asking Brahma Echo")
+        title = QLabel("Try asking Friday")
         title.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
         title.setStyleSheet("color: #ffffff; background: transparent;")
         subtitle = QLabel("Create a presentation, analyze a screen, build a website, organize files, or run browser automation.")
@@ -3037,7 +3178,9 @@ class ConversationFeed(QScrollArea):
         self._layout.addStretch(1)
         self._message_count = 0
 
-    def add_message(self, role: str, name: str, text: str, stamp: str, attachments: list[dict] | None = None, animate: bool = False, event_type: str | None = None):
+    def add_message(self, role: str, name: str, text: str, stamp: str,
+                    attachments: list[dict] | None = None, animate: bool = False,
+                    event_type: str | None = None, message_id: str | None = None):
         vw = self.viewport().width()
         if hasattr(self, "_content") and self._content is not None and vw > 20:
             self._content.setFixedWidth(vw)
@@ -3050,14 +3193,17 @@ class ConversationFeed(QScrollArea):
             bubble = self._build_artifact_card(text, attachments=attachments, stamp=stamp)
             self._layout.addWidget(bubble, alignment=Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop)
         elif role == "user":
-            bubble = ChatBubble(role, name, text, stamp, attachments=attachments, parent=self, animate=animate)
+            bubble = ChatBubble(role, name, text, stamp, attachments=attachments, parent=self, animate=animate, message_id=message_id)
+            bubble.delete_requested.connect(self._on_bubble_delete_requested)
             self._layout.addWidget(bubble, alignment=Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
         else:
-            bubble = ChatBubble(role, name, text, stamp, attachments=attachments, parent=self, animate=animate)
+            bubble = ChatBubble(role, name, text, stamp, attachments=attachments, parent=self, animate=animate, message_id=message_id)
+            bubble.delete_requested.connect(self._on_bubble_delete_requested)
             self._layout.addWidget(bubble, alignment=Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
-        
+
         self._layout.addStretch(1)
         self._message_count += 1
+
         self._sync_empty_state()
         QTimer.singleShot(0, self.scroll_to_bottom)
 
@@ -3103,15 +3249,42 @@ class ConversationFeed(QScrollArea):
             content = msg.get("content") or ""
             stamp = _fmt_time_stamp(msg.get("timestamp"))
             attachments = msg.get("attachments") or []
+            msg_id = msg.get("id") or None
             name = {
                 "user": "You",
-                "assistant": "Brahma Echo",
+                "assistant": "Friday",
                 "system": "System",
                 "file": "Files",
-            }.get(role, "Brahma Echo")
-            self.add_message(role, name, content, stamp, attachments=attachments, animate=False)
+            }.get(role, "Friday")
+            self.add_message(role, name, content, stamp, attachments=attachments, animate=False, message_id=msg_id)
         self._sync_empty_state()
         QTimer.singleShot(0, self.scroll_to_bottom)
+
+    def _on_bubble_delete_requested(self, message_id: str):
+        """Called when user confirms deletion of a chat bubble. Removes from DB and UI."""
+        # Find bubble widget with this message_id and remove from layout
+        bubble_widget = None
+        for i in range(self._layout.count()):
+            item = self._layout.itemAt(i)
+            w = item.widget() if item else None
+            if isinstance(w, ChatBubble) and getattr(w, "_message_id", "") == message_id:
+                bubble_widget = w
+                break
+        if bubble_widget is not None:
+            self._layout.removeWidget(bubble_widget)
+            bubble_widget.hide()
+            bubble_widget.deleteLater()
+            self._message_count = max(0, self._message_count - 1)
+            self._sync_empty_state()
+        # Delete from DB — walk up to find the store reference
+        root = self.parentWidget()
+        while root is not None and not hasattr(root, "_store"):
+            root = root.parentWidget()
+        if root is not None and hasattr(root, "_store"):
+            try:
+                root._store.delete_message(message_id)
+            except Exception:
+                pass
 
     def _sync_empty_state(self):
         if self._empty_widget is None:
@@ -3301,7 +3474,7 @@ class WorkspaceSidebar(QWidget):
 
         header = QHBoxLayout()
         header.setSpacing(10)
-        self._title = QLabel("BRAHMA ECHO WORKSPACE")
+        self._title = QLabel("FRIDAY WORKSPACE")
         self._title.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
         self._title.setStyleSheet("color: #FFFFFF; background: transparent; letter-spacing: 1px;")
         header.addWidget(self._title)
@@ -3464,7 +3637,7 @@ class WorkspaceSidebar(QWidget):
         input_row.addWidget(self._attach_btn)
 
         self._input = QLineEdit()
-        self._input.setPlaceholderText("Message Brahma Echo...")
+        self._input.setPlaceholderText("Message Friday...")
         self._input.setFont(QFont("Segoe UI", 10))
         self._input.setStyleSheet(
             f"QLineEdit {{ background: transparent; color: {C.WHITE}; border: none; padding: 2px 4px; selection-background-color: rgba(255, 179, 0, 0.25); }}"
@@ -3797,7 +3970,7 @@ class WorkspaceSidebar(QWidget):
         if not raw:
             return
         low = raw.lower()
-        if low.startswith(("you:", "brahma echo:")):
+        if low.startswith(("you:", "friday:")):
             return
         if low.startswith("sys:"):
             self.record_chat_event({"role": "system", "text": raw.split(":", 1)[1].strip(), "source": "local"})
@@ -3820,7 +3993,7 @@ class WorkspaceSidebar(QWidget):
         elif role == "assistant":
             convo_id = self._store.record_chat("assistant", text, conversation_id=convo_id, attachments=attachments)
             self._active_conversation_id = convo_id
-            self._feed.add_message("assistant", "Brahma Echo", text, _fmt_time_stamp(stamp), attachments=attachments, animate=True)
+            self._feed.add_message("assistant", "Friday", text, _fmt_time_stamp(stamp), attachments=attachments, animate=True)
             self._hide_memory_banner()
         elif role == "system":
             convo_id = self._store.record_chat("system", text, conversation_id=convo_id, attachments=attachments)
@@ -3870,7 +4043,6 @@ class WorkspaceSidebar(QWidget):
                 "text": data.get("result") or data.get("output") or "Done.",
                 "source": data.get("source") or "local",
             })
-            QTimer.singleShot(4000, self._task_card.hide)
         elif action == "clear":
             self._task_card.clear_workspace()
 
@@ -3933,20 +4105,21 @@ class InlineChatWorkspace(QFrame):
         btn.setCheckable(True)
         btn.setChecked(active)
         btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        btn.setFixedHeight(34)
+        btn.setFixedHeight(32)
         btn.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
         btn.setStyleSheet(
             """
             QPushButton {
-                background: rgba(255,255,255,0.04);
-                color: rgba(255,255,255,0.82);
-                border: 1px solid rgba(255,255,255,0.08);
-                border-radius: 10px;
+                background: rgba(255, 255, 255, 0.04);
+                color: rgba(255, 255, 255, 0.70);
+                border: 1px solid rgba(255, 255, 255, 0.07);
+                border-radius: 8px;
                 padding: 0 14px;
             }
             QPushButton:hover {
-                background: rgba(255, 179, 0,0.08);
-                border: 1px solid rgba(255, 179, 0,0.30);
+                background: rgba(255, 255, 255, 0.08);
+                border: 1px solid rgba(255, 255, 255, 0.14);
+                color: #FFFFFF;
             }
             """
         )
@@ -3958,19 +4131,19 @@ class InlineChatWorkspace(QFrame):
         self._history_btn.setChecked(index == 1)
         if index == 0:
             self._chat_btn.setStyleSheet("""
-                QPushButton { background: rgba(255, 179, 0,0.16); color: #FFFFFF; border: 1px solid rgba(255, 179, 0,180); border-radius: 10px; padding: 0 14px; }
+                QPushButton { background: rgba(255, 255, 255, 0.12); color: #FFFFFF; border: 1px solid rgba(255, 255, 255, 0.18); border-radius: 8px; padding: 0 14px; font-weight: 600; }
             """)
             self._history_btn.setStyleSheet("""
-                QPushButton { background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.82); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 0 14px; }
-                QPushButton:hover { background: rgba(255, 179, 0,0.08); border: 1px solid rgba(255, 179, 0,0.30); }
+                QPushButton { background: rgba(255, 255, 255, 0.04); color: rgba(255, 255, 255, 0.70); border: 1px solid rgba(255, 255, 255, 0.07); border-radius: 8px; padding: 0 14px; }
+                QPushButton:hover { background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.14); color: #FFFFFF; }
             """)
         else:
             self._history_btn.setStyleSheet("""
-                QPushButton { background: rgba(255, 179, 0,0.16); color: #FFFFFF; border: 1px solid rgba(255, 179, 0,180); border-radius: 10px; padding: 0 14px; }
+                QPushButton { background: rgba(255, 255, 255, 0.12); color: #FFFFFF; border: 1px solid rgba(255, 255, 255, 0.18); border-radius: 8px; padding: 0 14px; font-weight: 600; }
             """)
             self._chat_btn.setStyleSheet("""
-                QPushButton { background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.82); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 0 14px; }
-                QPushButton:hover { background: rgba(255, 179, 0,0.08); border: 1px solid rgba(255, 179, 0,0.30); }
+                QPushButton { background: rgba(255, 255, 255, 0.04); color: rgba(255, 255, 255, 0.70); border: 1px solid rgba(255, 255, 255, 0.07); border-radius: 8px; padding: 0 14px; }
+                QPushButton:hover { background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.14); color: #FFFFFF; }
             """)
 
     def _build_chat_tab(self) -> QWidget:
@@ -3986,11 +4159,11 @@ class InlineChatWorkspace(QFrame):
         today_pill.setFont(QFont("Segoe UI", 8, QFont.Weight.Bold))
         today_pill.setStyleSheet("""
             QLabel {
-                background: rgba(255, 179, 0, 0.12);
-                color: rgba(255, 255, 255, 0.85);
-                border: 1px solid rgba(255, 179, 0, 0.25);
-                border-radius: 12px;
-                padding: 4px 14px;
+                background: rgba(255, 255, 255, 0.06);
+                color: rgba(255, 255, 255, 0.75);
+                border: 1px solid rgba(255, 255, 255, 0.10);
+                border-radius: 10px;
+                padding: 3px 12px;
             }
         """)
         today_bar.addWidget(today_pill)
@@ -4005,8 +4178,8 @@ class InlineChatWorkspace(QFrame):
         self._memory_frame.setVisible(False)
         self._memory_frame.setStyleSheet("""
             QFrame {
-                background: rgba(255, 179, 0,0.05);
-                border: 1px solid rgba(255, 179, 0,0.24);
+                background: rgba(18, 22, 34, 0.65);
+                border: 1px solid rgba(255, 255, 255, 0.09);
                 border-radius: 12px;
             }
         """)
@@ -4029,8 +4202,8 @@ class InlineChatWorkspace(QFrame):
         input_container = QFrame()
         input_container.setStyleSheet(
             f"QFrame {{ "
-            f"  background: rgba(14, 17, 24, 0.40); "
-            f"  border: 1px solid rgba(255, 179, 0, 0.32); "
+            f"  background: rgba(18, 22, 34, 0.68); "
+            f"  border: 1px solid rgba(255, 255, 255, 0.09); "
             f"  border-radius: 12px; "
             f"}}"
         )
@@ -4050,10 +4223,10 @@ class InlineChatWorkspace(QFrame):
         input_row.addWidget(self._attach_btn)
 
         self._input = QLineEdit()
-        self._input.setPlaceholderText("Message Brahma Echo...")
+        self._input.setPlaceholderText("Message Friday...")
         self._input.setFont(QFont("Segoe UI", 10))
         self._input.setStyleSheet(
-            f"QLineEdit {{ background: transparent; color: {C.WHITE}; border: none; padding: 0 4px; selection-background-color: rgba(255, 179, 0, 0.25); }}"
+            f"QLineEdit {{ background: transparent; color: {C.WHITE}; border: none; padding: 0 4px; selection-background-color: rgba(10, 132, 255, 0.35); }}"
         )
         self._input.returnPressed.connect(self._send)
         input_row.addWidget(self._input, 1)
@@ -4074,8 +4247,8 @@ class InlineChatWorkspace(QFrame):
         self._send_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._send_btn.setToolTip("Send message")
         self._send_btn.setStyleSheet(
-            f"QPushButton {{ background: rgba(255, 179, 0, 0.22); color: {C.PRI}; border: 1px solid rgba(255, 179, 0, 0.45); border-radius: 7px; font-weight: bold; font-size: 13px; }}"
-            f"QPushButton:hover {{ background: rgba(255, 179, 0, 0.40); color: #FFFFFF; border-color: {C.PRI}; }}"
+            f"QPushButton {{ background: #0A84FF; color: #FFFFFF; border: none; border-radius: 7px; font-weight: bold; font-size: 13px; }}"
+            f"QPushButton:hover {{ background: #0071E3; }}"
         )
         self._send_btn.clicked.connect(self._send)
         input_row.addWidget(self._send_btn)
@@ -4084,7 +4257,7 @@ class InlineChatWorkspace(QFrame):
 
         footer = QHBoxLayout()
         footer.setContentsMargins(4, 2, 4, 2)
-        self._footer_status = QLabel("Brahma Echo is ready")
+        self._footer_status = QLabel("Friday is ready")
         self._footer_status.setFont(QFont("Segoe UI", 8))
         self._footer_status.setStyleSheet("color: rgba(255, 255, 255, 0.55); background: transparent;")
         footer.addWidget(self._footer_status)
@@ -4220,7 +4393,7 @@ class InlineChatWorkspace(QFrame):
             self._show_memories(self._store.search_memories(text))
         elif role == "assistant":
             self._store.record_chat("assistant", text, conversation_id=convo_id, attachments=attachments)
-            self._feed.add_message("assistant", "Brahma Echo", text, stamp, attachments=attachments)
+            self._feed.add_message("assistant", "Friday", text, stamp, attachments=attachments)
             self._hide_memories()
         elif role == "system":
             self._store.record_chat("system", text, conversation_id=convo_id, attachments=attachments)
@@ -4237,7 +4410,7 @@ class InlineChatWorkspace(QFrame):
         low = raw.lower()
         if low.startswith("you:"):
             self.record_chat_event({"role": "user", "text": raw.split(":", 1)[1].strip()})
-        elif low.startswith("brahma echo:"):
+        elif low.startswith("friday:"):
             self.record_chat_event({"role": "assistant", "text": raw.split(":", 1)[1].strip()})
         elif low.startswith("sys:"):
             self.record_chat_event({"role": "system", "text": raw.split(":", 1)[1].strip()})
@@ -4277,7 +4450,6 @@ class InlineChatWorkspace(QFrame):
                 "text": data.get("result") or data.get("output") or "Done.",
                 "source": data.get("source") or "local",
             })
-            QTimer.singleShot(4000, self._task_card.hide)
         elif action == "clear":
             self._task_card.clear_workspace()
 
@@ -4348,7 +4520,7 @@ class LauncherControlPanel(QDialog):
         lay.setContentsMargins(18, 16, 18, 16)
         lay.setSpacing(10)
 
-        title = QLabel("BRAHMA ECHO CONTROL")
+        title = QLabel("FRIDAY CONTROL")
         title.setFont(QFont("Segoe UI", 13, QFont.Weight.Bold))
         title.setStyleSheet("color: #FFFFFF; background: transparent; letter-spacing: 1px;")
         lay.addWidget(title)
@@ -4390,8 +4562,8 @@ class LauncherControlPanel(QDialog):
         self._startup_btn = mk_btn("Show Workspace On Startup", checkable=True, checked=bool(startup_workspace))
         self._show_icon_btn = mk_btn("Show Floating Icon")
         self._hide_icon_btn = mk_btn("Hide Floating Icon")
-        self._restart_btn = mk_btn("Restart Brahma Echo")
-        self._quit_btn = mk_btn("Quit Brahma Echo")
+        self._restart_btn = mk_btn("Restart Friday")
+        self._quit_btn = mk_btn("Quit Friday")
         self._open_app_btn = mk_btn("Open App")
         self._open_dev_btn = mk_btn("Open Developer Mode")
 
@@ -4434,7 +4606,7 @@ class LauncherControlPanel(QDialog):
         flay = QVBoxLayout(frame)
         flay.setContentsMargins(18, 16, 18, 16)
         flay.setSpacing(10)
-        lbl = QLabel("Hide Brahma Echo icon?")
+        lbl = QLabel("Hide Friday icon?")
         lbl.setStyleSheet("color: #FFFFFF; background: transparent; font: 700 11pt 'Segoe UI';")
         sub = QLabel("You can restore it from the system tray.")
         sub.setStyleSheet("color: rgba(255,255,255,0.65); background: transparent;")
@@ -4492,15 +4664,15 @@ class SmallPanelCard(QFrame):
         self._body_lbl.setStyleSheet(f"color: {accent}; background: transparent;")
         lay.addWidget(self._body_lbl)
 
-class BrahmaTelemetryWing(QFrame):
+class FridayTelemetryWing(QFrame):
     """
-    Brahma Right Wing: Live Operations, Research Streams, and Sources.
+    Friday Right Wing: Live Operations, Research Streams, and Sources.
     Auto-dismisses in 10 seconds unless pinned or hovered.
     Adapts dynamically to the active theme color (Amber Gold by default).
     """
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setObjectName("BrahmaTelemetryWing")
+        self.setObjectName("FridayTelemetryWing")
         self.setFixedWidth(310)
         self.setMinimumHeight(320)
         self.setMaximumHeight(520)
@@ -4628,46 +4800,47 @@ class BrahmaTelemetryWing(QFrame):
         self._theme_rgb = (r, g, b)
 
         self.setStyleSheet(f"""
-            QFrame#BrahmaTelemetryWing {{
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                    stop:0 rgba(10, 15, 24, 238),
-                    stop:0.6 rgba(6, 10, 18, 222),
-                    stop:1 rgba(3, 5, 12, 212));
-                border: 1px solid rgba({r}, {g}, {b}, 0.45);
-                border-radius: 18px;
+            QFrame#FridayTelemetryWing {{
+                background: qlineargradient(x1:0, y1:0, x2:0.8, y2:1,
+                    stop:0 rgba(22, 28, 42, 225),
+                    stop:0.5 rgba(16, 21, 32, 230),
+                    stop:1 rgba(10, 14, 22, 238));
+                border: 1px solid rgba(255, 255, 255, 0.10);
+                border-top: 1px solid rgba(255, 255, 255, 0.16);
+                border-radius: 16px;
             }}
             QLabel {{
                 background: transparent;
             }}
             QPushButton {{
-                background: rgba({r}, {g}, {b}, 0.10);
-                border: 1px solid rgba({r}, {g}, {b}, 0.28);
-                border-radius: 6px;
-                color: #ffffff;
-                font-family: 'Segoe UI';
+                background: rgba(255, 255, 255, 0.05);
+                border: 1px solid rgba(255, 255, 255, 0.09);
+                border-radius: 7px;
+                color: #F5F5F7;
+                font-family: 'Segoe UI', -apple-system, sans-serif;
                 font-size: 11px;
                 font-weight: 600;
-                padding: 4px 8px;
+                padding: 4px 10px;
             }}
             QPushButton:hover {{
-                background: rgba({r}, {g}, {b}, 0.26);
-                border: 1px solid {pri};
-                color: {pri};
+                background: rgba(255, 255, 255, 0.12);
+                border: 1px solid rgba(255, 255, 255, 0.18);
+                color: #FFFFFF;
             }}
         """)
 
         self._hud_tag.setStyleSheet(f"color: {pri}; letter-spacing: 1px; font-weight: bold;")
         self._tool_tag.setStyleSheet(f"""
-            background: rgba({r}, {g}, {b}, 0.14);
+            background: rgba(255, 255, 255, 0.08);
             color: {pri};
-            border: 1px solid rgba({r}, {g}, {b}, 0.38);
-            border-radius: 9px;
-            padding: 1px 7px;
-            font-weight: bold;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 8px;
+            padding: 2px 8px;
+            font-weight: 600;
         """)
         self._step_box.setStyleSheet(f"""
-            background: rgba({r}, {g}, {b}, 0.07);
-            border: 1px solid rgba({r}, {g}, {b}, 0.22);
+            background: rgba(18, 22, 34, 0.60);
+            border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 10px;
         """)
         self._pulse_dot.setStyleSheet(f"color: {pri}; font-weight: bold;")
@@ -4805,16 +4978,16 @@ class BrahmaTelemetryWing(QFrame):
         self._anim.start()
 
 
-class BrahmaResultWing(QFrame):
+class FridayResultWing(QFrame):
     """
-    Brahma Left Wing: Final Results, Generated Deliverables (PDF/Word/Media/Code),
+    Friday Left Wing: Final Results, Generated Deliverables (PDF/Word/Media/Code),
     Executive Summary Bullets, and Quick Action Buttons.
     Auto-dismisses in 10 seconds unless pinned or hovered.
     Adapts dynamically to the active theme color (Amber Gold by default).
     """
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setObjectName("BrahmaResultWing")
+        self.setObjectName("FridayResultWing")
         self.setFixedWidth(310)
         self.setMinimumHeight(320)
         self.setMaximumHeight(540)
@@ -4966,46 +5139,47 @@ class BrahmaResultWing(QFrame):
         self._theme_rgb = (r, g, b)
 
         self.setStyleSheet(f"""
-            QFrame#BrahmaResultWing {{
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                    stop:0 rgba(14, 18, 26, 240),
-                    stop:0.6 rgba(9, 13, 20, 225),
-                    stop:1 rgba(4, 7, 12, 215));
-                border: 1px solid rgba({r}, {g}, {b}, 0.45);
-                border-radius: 18px;
+            QFrame#FridayResultWing {{
+                background: qlineargradient(x1:0, y1:0, x2:0.8, y2:1,
+                    stop:0 rgba(22, 28, 42, 225),
+                    stop:0.5 rgba(16, 21, 32, 230),
+                    stop:1 rgba(10, 14, 22, 238));
+                border: 1px solid rgba(255, 255, 255, 0.10);
+                border-top: 1px solid rgba(255, 255, 255, 0.16);
+                border-radius: 16px;
             }}
             QLabel {{
                 background: transparent;
             }}
             QPushButton {{
-                background: rgba({r}, {g}, {b}, 0.10);
-                border: 1px solid rgba({r}, {g}, {b}, 0.28);
-                border-radius: 6px;
-                color: #ffffff;
-                font-family: 'Segoe UI';
+                background: rgba(255, 255, 255, 0.05);
+                border: 1px solid rgba(255, 255, 255, 0.09);
+                border-radius: 7px;
+                color: #F5F5F7;
+                font-family: 'Segoe UI', -apple-system, sans-serif;
                 font-size: 11px;
                 font-weight: 600;
-                padding: 4px 8px;
+                padding: 4px 10px;
             }}
             QPushButton:hover {{
-                background: rgba({r}, {g}, {b}, 0.26);
-                border: 1px solid {pri};
-                color: {pri};
+                background: rgba(255, 255, 255, 0.12);
+                border: 1px solid rgba(255, 255, 255, 0.18);
+                color: #FFFFFF;
             }}
         """)
 
         self._hud_tag.setStyleSheet(f"color: {pri}; letter-spacing: 1px; font-weight: bold;")
         self._status_badge.setStyleSheet(f"""
-            background: rgba({r}, {g}, {b}, 0.15);
-            color: {pri};
-            border: 1px solid rgba({r}, {g}, {b}, 0.40);
-            border-radius: 9px;
-            padding: 1px 7px;
-            font-weight: bold;
+            background: rgba(48, 209, 88, 0.12);
+            color: #30D158;
+            border: 1px solid rgba(48, 209, 88, 0.28);
+            border-radius: 8px;
+            padding: 2px 8px;
+            font-weight: 600;
         """)
         self._file_card.setStyleSheet(f"""
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba({r}, {g}, {b}, 0.25);
+            background: rgba(18, 22, 34, 0.60);
+            border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 10px;
         """)
         self._fuse_lbl.setStyleSheet(f"color: rgba({r}, {g}, {b}, 0.75); font-weight: bold;")
@@ -5162,7 +5336,7 @@ class BrahmaResultWing(QFrame):
                         import subprocess
                         subprocess.Popen(["xdg-open", str(p)])
                 except Exception as e:
-                    print(f"[BrahmaResultWing] Open file error: {e}")
+                    print(f"[FridayResultWing] Open file error: {e}")
 
     def _on_reveal_clicked(self):
         if self._active_file_path:
@@ -5177,7 +5351,7 @@ class BrahmaResultWing(QFrame):
                 else:
                     subprocess.Popen(["xdg-open", str(p.parent)])
             except Exception as e:
-                print(f"[BrahmaResultWing] Reveal error: {e}")
+                print(f"[FridayResultWing] Reveal error: {e}")
 
     def set_body(self, text: str):
         if hasattr(self, "_summary_lbl") and text:
@@ -5201,11 +5375,12 @@ class StatCard(QFrame):
         self.setStyleSheet(
             f"""
             QFrame#StatCard {{
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                    stop:0 rgba(18, 20, 26, 240),
-                    stop:1 rgba(8, 10, 14, 220));
-                border: 1px solid rgba(255, 255, 255, 0.14);
-                border-radius: 16px;
+                background: qlineargradient(x1:0, y1:0, x2:0.8, y2:1,
+                    stop:0 rgba(22, 28, 42, 220),
+                    stop:1 rgba(12, 16, 26, 200));
+                border: 1px solid rgba(255, 255, 255, 0.09);
+                border-top: 1px solid rgba(255, 255, 255, 0.15);
+                border-radius: 14px;
             }}
             """
         )
@@ -5308,10 +5483,10 @@ class LogWidget(QScrollArea):
         tl = raw.lower()
         if tl.startswith("you:"):
             return "user", "You", raw[4:].strip()
-        if tl.startswith("brahma echo:"):
-            return "assistant", "Brahma Echo", raw[len("Brahma Echo:"):].strip()
-        if tl.startswith("brahma echo:"):
-            return "assistant", "Brahma Echo", raw[len("Brahma Echo:"):].strip()
+        if tl.startswith("friday:"):
+            return "assistant", "Friday", raw[len("Friday:"):].strip()
+        if tl.startswith("friday:"):
+            return "assistant", "Friday", raw[len("Friday:"):].strip()
         if tl.startswith("file:"):
             return "file", "File", raw[5:].strip()
         if tl.startswith("err:"):
@@ -5416,7 +5591,7 @@ class FileDropZone(QWidget):
 
     def _browse(self):
         path, _ = QFileDialog.getOpenFileName(
-            self, "Select a file for Brahma Echo", str(Path.home()),
+            self, "Select a file for Friday", str(Path.home()),
             "All Files (*.*);;"
             "Images (*.jpg *.jpeg *.png *.gif *.webp *.bmp *.svg);;"
             "Documents (*.pdf *.docx *.txt *.md *.pptx);;"
@@ -5732,8 +5907,8 @@ class SetupOverlay(QWidget):
         self._stack.addWidget(page)
 
     def _save_identity_and_next(self):
-        identity.set_assistant_name(self._inp_ast.text().strip() or "Brahma")
-        identity.set_application_name(self._inp_app.text().strip() or "Brahma Echo")
+        identity.set_assistant_name(self._inp_ast.text().strip() or "Friday")
+        identity.set_application_name(self._inp_app.text().strip() or "Friday")
         self._stack.setCurrentIndex(2)
 
     # ── STAGE 1.2: Owner Profile ────────────────────────────────
@@ -6106,10 +6281,10 @@ class SetupOverlay(QWidget):
         intro_lay.setSpacing(12)
 
         self._intro_lines = []
-        for txt in ["Identity confirmed.", "Hello.", "I'm Brahma Echo.", "Ready whenever you are."]:
+        for txt in ["Identity confirmed.", "Hello.", "I'm Friday.", "Ready whenever you are."]:
             lbl = QLabel(txt)
             lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            if txt == "I'm Brahma Echo.":
+            if txt == "I'm Friday.":
                 lbl.setFont(QFont("Segoe UI", 24, QFont.Weight.Bold))
                 lbl.setStyleSheet("color: #ffb300; background: transparent; border: none;")
             else:
@@ -6121,7 +6296,7 @@ class SetupOverlay(QWidget):
 
         intro_lay.addSpacing(20)
 
-        self._launch_btn = QPushButton("Launch Brahma Echo →")
+        self._launch_btn = QPushButton("Launch Friday →")
         self._launch_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._launch_btn.setFixedSize(220, 48)
         self._launch_btn.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
@@ -6468,7 +6643,7 @@ class SetupOverlay(QWidget):
         self._show_intro_final()
 
     def _show_intro_final(self):
-        """Show the Brahma Echo intro sequence."""
+        """Show the Friday intro sequence."""
         page = self._stack.widget(6)
         lay = page.layout()
         self._intro_widget.setParent(None)
@@ -6619,12 +6794,9 @@ class CommandBar(QWidget):
         frame.setObjectName("CommandBarFrame")
         frame.setStyleSheet(f"""
             QFrame#CommandBarFrame {{
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 rgba(6, 6, 10, 252),
-                    stop:0.3 rgba(12, 11, 16, 252),
-                    stop:0.7 rgba(12, 11, 16, 252),
-                    stop:1 rgba(6, 6, 10, 252));
-                border: 1px solid rgba(255, 179, 0, 0.22);
+                background: rgba(18, 22, 34, 0.78);
+                border: 1px solid rgba(255, 255, 255, 0.10);
+                border-top: 1px solid rgba(255, 255, 255, 0.16);
                 border-radius: 20px;
             }}
         """)
@@ -6632,42 +6804,42 @@ class CommandBar(QWidget):
         lay.setContentsMargins(6, 4, 6, 4)
         lay.setSpacing(6)
 
-        # Brahma Echo mini logo
+        # Friday mini logo
         logo_frame = QFrame()
         logo_frame.setFixedSize(32, 32)
         logo_frame.setStyleSheet("""
             QFrame {
-                background: rgba(255, 179, 0, 0.06);
-                border: 1px solid rgba(255, 179, 0, 0.25);
+                background: rgba(255, 255, 255, 0.05);
+                border: 1px solid rgba(255, 255, 255, 0.10);
                 border-radius: 16px;
             }
         """)
         logo_lay = QVBoxLayout(logo_frame)
         logo_lay.setContentsMargins(0, 0, 0, 0)
-        logo_lbl = QLabel("\u092C\u094D\u0930")  # ब्र (short Hindi)
+        logo_lbl = QLabel("F")  # Friday badge
         logo_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        logo_lbl.setFont(QFont("Nirmala UI", 9, QFont.Weight.Bold))
-        logo_lbl.setStyleSheet("color: #ffb300; background: transparent; border: none;")
+        logo_lbl.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold))
+        logo_lbl.setStyleSheet("color: #0A84FF; background: transparent; border: none;")
         logo_lay.addWidget(logo_lbl)
         lay.addWidget(logo_frame)
 
         # Input field
         self._input = QLineEdit()
-        self._input.setPlaceholderText("Tell Brahma Echo what to do...")
+        self._input.setPlaceholderText("Tell Friday what to do...")
         self._input.setFont(QFont("Segoe UI", 9))
         self._input.setFixedHeight(32)
         self._input.setStyleSheet(f"""
             QLineEdit {{
-                background: rgba(255, 255, 255, 0.03);
+                background: rgba(255, 255, 255, 0.04);
                 color: {C.WHITE};
-                border: 1px solid rgba(255, 255, 255, 0.06);
+                border: 1px solid rgba(255, 255, 255, 0.07);
                 border-radius: 16px;
                 padding: 0 14px;
-                selection-background-color: rgba(255, 179, 0, 0.25);
+                selection-background-color: rgba(10, 132, 255, 0.35);
             }}
             QLineEdit:focus {{
-                border: 1px solid rgba(255, 179, 0, 0.45);
-                background: rgba(255, 179, 0, 0.03);
+                border: 1px solid rgba(10, 132, 255, 0.50);
+                background: rgba(10, 132, 255, 0.04);
             }}
         """)
         self._input.returnPressed.connect(self._submit)
@@ -6827,7 +6999,7 @@ class DeveloperModeDialog(QDialog):
         title.setStyleSheet(f"color: {C.PRI};")
         root.addWidget(title)
 
-        desc = QLabel("Pick a workspace folder Brahma Echo should use when building websites or other workspace-based tasks.")
+        desc = QLabel("Pick a workspace folder Friday should use when building websites or other workspace-based tasks.")
         desc.setWordWrap(True)
         desc.setStyleSheet(f"color: {C.TEXT_DIM};")
         root.addWidget(desc)
@@ -6973,6 +7145,8 @@ class ScanningOverlay(QWidget):
         
         if pixmap is not None:
             try:
+                import cv2
+                import numpy as np
                 # Convert QPixmap to CV2
                 qimg = pixmap.toImage().convertToFormat(QImage.Format.Format_RGB888)
                 width = qimg.width()
@@ -7514,13 +7688,13 @@ class BootSequenceOverlay(QWidget):
                     painter.setFont(font1)
                     
                     # Manual vertical layout for text
-                    painter.drawText(QRectF(-ring_rad, -60, ring_rad*2, 60), Qt.AlignmentFlag.AlignCenter, "BRAHMA")
+                    painter.drawText(QRectF(-ring_rad, -60, ring_rad*2, 60), Qt.AlignmentFlag.AlignCenter, "FRIDAY")
                     
                     painter.setPen(QColor(255, 200, 87, alpha))
                     font2 = QFont("Segoe UI", 16, QFont.Weight.Medium)
                     font2.setLetterSpacing(QFont.SpacingType.AbsoluteSpacing, 2)
                     painter.setFont(font2)
-                    painter.drawText(QRectF(-ring_rad, 0, ring_rad*2, 40), Qt.AlignmentFlag.AlignCenter, "Echo")
+                    painter.drawText(QRectF(-ring_rad, 0, ring_rad*2, 40), Qt.AlignmentFlag.AlignCenter, "AI")
                     
                     # Status message cycling
                     msg_idx = int(((self._time - 2.5) / 1.5) * len(self._status_messages))
@@ -7822,7 +7996,7 @@ class MeetingOverlay(QWidget):
         self._speech.setStyleSheet(f"color: {C.WHITE}; background: transparent;")
         lay.addWidget(self._speech)
 
-        self._answer = QLabel("Brahma Echo will show the live answer here.")
+        self._answer = QLabel("Friday will show the live answer here.")
         self._answer.setWordWrap(True)
         self._answer.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
         self._answer.setStyleSheet(f"color: {C.WHITE}; background: transparent;")
@@ -7862,15 +8036,15 @@ class FloatingLauncher(QWidget):
     position_changed = pyqtSignal(int, int)
 
     _STATE_THEMES = {
-        "idle": (255, 179, 0),        # Amber Gold
-        "listening": (0, 229, 255),    # Electric Cyan
-        "thinking": (179, 136, 255),   # Holographic Violet
-        "speaking": (0, 230, 118),     # Vivid Emerald
-        "executing": (255, 145, 0),    # Dynamic Orange
-        "processing": (255, 145, 0),   # Dynamic Orange
-        "working": (255, 145, 0),
-        "muted": (160, 160, 160),      # Cool Silver
-        "error": (255, 82, 82),        # Alert Crimson
+        "idle": (212, 43, 43),         # Iron Man Crimson Red
+        "listening": (0, 229, 255),    # Arc Reactor Electric Cyan
+        "thinking": (255, 193, 7),     # Stark Armor Gold
+        "speaking": (0, 229, 255),     # Arc Core Cyan
+        "executing": (255, 145, 0),    # Repulsor Pulse Orange
+        "processing": (255, 193, 7),   # Armor Gold
+        "working": (212, 43, 43),      # Crimson Power
+        "muted": (160, 160, 160),      # Cool Titanium Silver
+        "error": (255, 50, 50),        # Warning Crimson
     }
 
     def __init__(self):
@@ -7887,6 +8061,13 @@ class FloatingLauncher(QWidget):
         self._status_line = "Ready"
         self._hovered = False
 
+        # Active Tony Stark Armor / Arc Reactor Design
+        try:
+            from memory import config_manager
+            self._stark_design = config_manager.get_stark_design()
+        except Exception:
+            self._stark_design = "nanotech"
+
         # Animation state
         self._anim_angle = 0.0
         self._ring2_angle = 0.0
@@ -7897,7 +8078,7 @@ class FloatingLauncher(QWidget):
 
         self._anim_timer = QTimer(self)
         self._anim_timer.timeout.connect(self._anim_tick)
-        self._anim_timer.start(25)  # 40fps
+        self._anim_timer.start(33)  # 30fps — smooth but CPU-light
 
         self._single_timer = QTimer(self)
         self._single_timer.setSingleShot(True)
@@ -7916,7 +8097,61 @@ class FloatingLauncher(QWidget):
         self._drag_button = None
         self._drag_offset = QPoint(0, 0)
         self._press_pos = QPoint(0, 0)
+        self._listen_btn = QPushButton(self)
+        self._microphone_active = False
+        self._listen_btn.setObjectName("floatingListenButton")
+        self._listen_btn.setGeometry(59, 59, 28, 28)
+        self._listen_btn.setIcon(QIcon(_icon_pixmap("mic", 16)))
+        self._listen_btn.setIconSize(QSize(16, 16))
+        self._listen_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._listen_btn.clicked.connect(lambda: self.action_requested.emit("voice_mode"))
         self._apply_state_style()
+
+        # Cache for color config — avoid re-importing every paint frame
+        self._color_cache: tuple | None = None
+        self._color_cache_key: str = ""
+
+    def set_stark_design(self, design_key: str):
+        try:
+            from memory import config_manager
+            self._stark_design = config_manager.set_stark_design(design_key)
+        except Exception:
+            self._stark_design = str(design_key or "nanotech").lower()
+        self.update()
+
+    def get_stark_design(self) -> str:
+        return getattr(self, "_stark_design", "nanotech")
+
+    def _get_active_colors(self):
+        cache_key = f"{getattr(self, '_stark_design', 'nanotech')}:{self._state}"
+        if self._color_cache is not None and self._color_cache_key == cache_key:
+            return self._color_cache
+        try:
+            from memory import config_manager
+            designs = getattr(config_manager, "STARK_DESIGNS", {})
+            curr = getattr(self, "_stark_design", "nanotech")
+            d_info = designs.get(curr, designs.get("nanotech", {}))
+            pri = d_info.get("primary_rgb", (0, 229, 255))
+            sec = d_info.get("secondary_rgb", (0, 255, 200))
+        except Exception:
+            pri = (0, 229, 255)
+            sec = (0, 255, 200)
+
+        if self._state == "idle":
+            result = pri, sec
+        elif self._state in ("listening", "speaking"):
+            result = sec, pri
+        elif self._state in ("thinking", "processing"):
+            result = (255, 193, 7), pri
+        elif self._state == "error":
+            result = (255, 50, 50), (255, 100, 100)
+        elif self._state == "muted":
+            result = (150, 150, 150), (100, 100, 100)
+        else:
+            result = pri, sec
+        self._color_cache = result
+        self._color_cache_key = cache_key
+        return result
 
     def set_audio_level(self, lvl: float):
         self._audio_lvl = max(0.0, min(1.0, float(lvl)))
@@ -7948,14 +8183,13 @@ class FloatingLauncher(QWidget):
     def showEvent(self, event):
         super().showEvent(event)
         if hasattr(self, "_anim_timer") and not self._anim_timer.isActive():
-            self._anim_timer.start(25)
+            self._anim_timer.start(33)
 
     def _anim_tick(self):
         if not self.isVisible():
             if hasattr(self, "_anim_timer") and self._anim_timer.isActive():
                 self._anim_timer.stop()
             return
-        import math
         # State-dependent spin speeds
         spin_speed = 3.2 if self._state == "thinking" else (2.4 if self._state in ("listening", "speaking") else 1.5)
         self._anim_angle = (self._anim_angle + spin_speed) % 360.0
@@ -7969,6 +8203,12 @@ class FloatingLauncher(QWidget):
         elif self._breath_val <= 0.0:
             self._breath_val = 0.0
             self._breath_dir = 1
+
+        # In idle with low audio, throttle to 20fps to cut CPU
+        is_idle = self._state == "idle" and self._audio_lvl < 0.05
+        target_interval = 50 if is_idle else 33
+        if self._anim_timer.interval() != target_interval:
+            self._anim_timer.setInterval(target_interval)
 
         w, h = self.width(), self.height()
         cx, cy = w / 2.0, h / 2.0
@@ -7986,15 +8226,16 @@ class FloatingLauncher(QWidget):
         self.update()
 
     def paintEvent(self, event):
-        import math
         painter = QPainter(self)
+
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         painter.setRenderHint(QPainter.RenderHint.TextAntialiasing)
         painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
         w, h = self.width(), self.height()
         cx, cy = w / 2.0, h / 2.0
 
-        ar, ag, ab = self._STATE_THEMES.get(self._state, (255, 179, 0))
+        (ar, ag, ab), (sr, sg, sb) = self._get_active_colors()
+        design = getattr(self, "_stark_design", "nanotech")
         breath = self._breath_val
         hover_boost = 1.35 if self._hovered else 1.0
         audio_boost = self._audio_lvl * 12.0
@@ -8010,89 +8251,236 @@ class FloatingLauncher(QWidget):
         painter.setBrush(QBrush(glow))
         painter.drawEllipse(QPointF(cx, cy), glow_r, glow_r)
 
-        # ── 2. Subtle Outer Orbit Guide Ring ──
-        guide_pen = QPen(QColor(ar, ag, ab, int(25 + breath * 20)), 0.75)
-        guide_pen.setStyle(Qt.PenStyle.DotLine)
-        painter.setPen(guide_pen)
-        painter.setBrush(Qt.BrushStyle.NoBrush)
-        painter.drawEllipse(QPointF(cx, cy), 39.0, 39.0)
+        # ── 2. Outer Armor Matrix / Telemetry Ring ──
+        if design == "nanotech":
+            # Endgame Concentric Dotted Guide Ring
+            guide_pen = QPen(QColor(ar, ag, ab, int(25 + breath * 20)), 0.75, Qt.PenStyle.DotLine)
+            painter.setPen(guide_pen)
+            painter.setBrush(Qt.BrushStyle.NoBrush)
+            painter.drawEllipse(QPointF(cx, cy), 39.0, 39.0)
 
-        # ── 3. High-Tech Dual Rotating Arcs ──
+        elif design == "mark_3":
+            # Hotrod Crimson Ring with 4 Stark Gold Tick Brackets
+            guide_pen = QPen(QColor(ar, ag, ab, int(70 + breath * 40)), 1.1)
+            painter.setPen(guide_pen)
+            painter.setBrush(Qt.BrushStyle.NoBrush)
+            painter.drawEllipse(QPointF(cx, cy), 39.0, 39.0)
+            gold_pen = QPen(QColor(sr, sg, sb, int(160 + breath * 80)), 1.8)
+            painter.setPen(gold_pen)
+            for deg in (0, 90, 180, 270):
+                rad = math.radians(deg)
+                p1 = QPointF(cx + math.cos(rad) * 37.0, cy + math.sin(rad) * 37.0)
+                p2 = QPointF(cx + math.cos(rad) * 41.5, cy + math.sin(rad) * 41.5)
+                painter.drawLine(p1, p2)
+
+        elif design == "hulkbuster":
+            # Veronica Heavy Hex-Armor Clamps (6 radial armor teeth at 60 deg)
+            base_pen = QPen(QColor(ar, ag, ab, int(60 + breath * 40)), 1.5)
+            painter.setPen(base_pen)
+            painter.setBrush(Qt.BrushStyle.NoBrush)
+            painter.drawEllipse(QPointF(cx, cy), 38.5, 38.5)
+            tooth_pen = QPen(QColor(sr, sg, sb, int(180 + breath * 65)), 2.6)
+            tooth_pen.setCapStyle(Qt.PenCapStyle.SquareCap)
+            painter.setPen(tooth_pen)
+            for i in range(6):
+                rad = math.radians(i * 60.0 + self._anim_angle * 0.15)
+                p1 = QPointF(cx + math.cos(rad) * 36.0, cy + math.sin(rad) * 36.0)
+                p2 = QPointF(cx + math.cos(rad) * 42.0, cy + math.sin(rad) * 42.0)
+                painter.drawLine(p1, p2)
+
+        elif design == "edith":
+            # AR Tactical Crosshair Reticle & 16 Perimeter Telemetry Ticks
+            guide_pen = QPen(QColor(ar, ag, ab, int(45 + breath * 35)), 0.8)
+            painter.setPen(guide_pen)
+            painter.setBrush(Qt.BrushStyle.NoBrush)
+            painter.drawEllipse(QPointF(cx, cy), 39.0, 39.0)
+            tick_pen = QPen(QColor(sr, sg, sb, int(140 + breath * 60)), 0.8)
+            painter.setPen(tick_pen)
+            for i in range(16):
+                rad = math.radians(i * 22.5)
+                rlen = 2.0 if i % 4 != 0 else 4.0
+                p1 = QPointF(cx + math.cos(rad) * (39.0 - rlen), cy + math.sin(rad) * (39.0 - rlen))
+                p2 = QPointF(cx + math.cos(rad) * 39.0, cy + math.sin(rad) * 39.0)
+                painter.drawLine(p1, p2)
+            # 4 Corner HUD Brackets
+            bracket_pen = QPen(QColor(sr, sg, sb, int(160 + breath * 80)), 1.2)
+            painter.setPen(bracket_pen)
+            b_off = 28.0
+            b_len = 5.0
+            for bx, by in [(-b_off, -b_off), (b_off, -b_off), (-b_off, b_off), (b_off, b_off)]:
+                sx = 1 if bx < 0 else -1
+                sy = 1 if by < 0 else -1
+                painter.drawLine(QPointF(cx + bx, cy + by), QPointF(cx + bx + sx * b_len, cy + by))
+                painter.drawLine(QPointF(cx + bx, cy + by), QPointF(cx + bx, cy + by + sy * b_len))
+
+        elif design == "stealth":
+            # Mach Supersonic Double Titanium Flight Compass
+            p_pen = QPen(QColor(ar, ag, ab, int(75 + breath * 40)), 0.9)
+            painter.setPen(p_pen)
+            painter.setBrush(Qt.BrushStyle.NoBrush)
+            painter.drawEllipse(QPointF(cx, cy), 37.5, 37.5)
+            painter.drawEllipse(QPointF(cx, cy), 39.8, 39.8)
+            t_pen = QPen(QColor(sr, sg, sb, int(180 + breath * 60)), 1.2)
+            painter.setPen(t_pen)
+            for i in range(8):
+                rad = math.radians(i * 45.0)
+                p1 = QPointF(cx + math.cos(rad) * 36.0, cy + math.sin(rad) * 36.0)
+                p2 = QPointF(cx + math.cos(rad) * 41.5, cy + math.sin(rad) * 41.5)
+                painter.drawLine(p1, p2)
+
+        elif design == "palladium":
+            # 10 Magnetic Copper Coils (Authentic 2008 Mark I Cave Reactor)
+            guide_pen = QPen(QColor(ar, ag, ab, int(60 + breath * 40)), 1.0)
+            painter.setPen(guide_pen)
+            painter.setBrush(Qt.BrushStyle.NoBrush)
+            painter.drawEllipse(QPointF(cx, cy), 38.0, 38.0)
+            coil_color = QColor(sr, sg, sb, int(190 + breath * 55))
+            coil_brush = QBrush(coil_color)
+            painter.setPen(QPen(QColor(ar, ag, ab, 120), 0.6))
+            painter.setBrush(coil_brush)
+            for i in range(10):
+                rad = math.radians(i * 36.0)
+                px = cx + math.cos(rad) * 37.5
+                py = cy + math.sin(rad) * 37.5
+                painter.save()
+                painter.translate(px, py)
+                painter.rotate(i * 36.0 + 90.0)
+                painter.drawRoundedRect(QRectF(-2.0, -3.5, 4.0, 7.0), 1.0, 1.0)
+                painter.restore()
+
+        # ── 3. High-Tech Dual Rotating Arcs & Telemetry ──
         # Primary Outer Arc
         a1 = min(255, int((170 + breath * 75 + self._audio_lvl * 50) * hover_boost))
-        pen1 = QPen(QColor(ar, ag, ab, a1), 2.2 + self._audio_lvl * 1.5)
+        arc_width = 3.0 if design == "hulkbuster" else (2.2 + self._audio_lvl * 1.5)
+        pen1 = QPen(QColor(ar, ag, ab, a1), arc_width)
         pen1.setCapStyle(Qt.PenCapStyle.RoundCap)
         painter.setPen(pen1)
+        painter.setBrush(Qt.BrushStyle.NoBrush)
         rect1 = QRectF(cx - 35.0, cy - 35.0, 70.0, 70.0)
         arc_len = 110 if self._state != "thinking" else 140
         painter.drawArc(rect1, int(self._anim_angle * 16), int(arc_len * 16))
 
         # Secondary Counter-Rotating Arc
-        a2 = min(255, int((90 + breath * 50) * hover_boost))
-        pen2 = QPen(QColor(ar, ag, ab, a2), 1.3)
+        a2 = min(255, int((110 + breath * 60) * hover_boost))
+        pen2 = QPen(QColor(sr, sg, sb, a2), 1.4)
         pen2.setCapStyle(Qt.PenCapStyle.RoundCap)
         painter.setPen(pen2)
         rect2 = QRectF(cx - 31.5, cy - 31.5, 63.0, 63.0)
         painter.drawArc(rect2, int(self._ring2_angle * 16), int(80 * 16))
 
+        # EDITH Radar Sweep Beam
+        if design == "edith":
+            sweep_rad = math.radians(self._anim_angle * 1.6)
+            sweep_x = cx + math.cos(sweep_rad) * 36.0
+            sweep_y = cy + math.sin(sweep_rad) * 36.0
+            radar_pen = QPen(QColor(sr, sg, sb, int(150 + breath * 80)), 1.1)
+            painter.setPen(radar_pen)
+            painter.drawLine(QPointF(cx, cy), QPointF(sweep_x, sweep_y))
+
         # Orbiting Satellite Beacon
         sat_rad = math.radians(self._anim_angle + 180.0)
-        sat_x = cx + math.cos(sat_rad) * 35.0
-        sat_y = cy + math.sin(sat_rad) * 35.0
-        sat_color = QColor(ar, ag, ab).lighter(150)
+        sat_r = 35.0 if design != "hulkbuster" else 33.5
+        sat_x = cx + math.cos(sat_rad) * sat_r
+        sat_y = cy + math.sin(sat_rad) * sat_r
+        sat_color = QColor(sr, sg, sb).lighter(140)
         painter.setPen(Qt.PenStyle.NoPen)
-        painter.setBrush(QBrush(QColor(sat_color.red(), sat_color.green(), sat_color.blue(), min(255, int(180 * hover_boost)))))
-        painter.drawEllipse(QPointF(sat_x, sat_y), 2.2, 2.2)
+        painter.setBrush(QBrush(QColor(sat_color.red(), sat_color.green(), sat_color.blue(), min(255, int(200 * hover_boost)))))
+        painter.drawEllipse(QPointF(sat_x, sat_y), 2.4, 2.4)
 
-        # ── 4. Central Glassmorphic Core (with Cursor Parallax) ──
+        # ── 4. Central Glassmorphic Core (with Parallax & Armor Heat) ──
         gx, gy = self._gaze_x, self._gaze_y
         core_r = 25.5 + self._audio_lvl * 2.0
         core_grad = QRadialGradient(cx + gx * 0.5, cy - 4.0 + gy * 0.5, core_r)
-        core_grad.setColorAt(0.0, QColor(20, 22, 30, 246))
-        core_grad.setColorAt(0.85, QColor(10, 11, 16, 252))
-        core_grad.setColorAt(1.0, QColor(ar, ag, ab, 30))
+        if design == "mark_3":
+            # Stark Unibeam chest core: White-gold heat center to deep armor dark
+            core_grad.setColorAt(0.0, QColor(255, 235, 180, 240))
+            core_grad.setColorAt(0.40, QColor(45, 15, 15, 250))
+            core_grad.setColorAt(0.90, QColor(15, 8, 8, 254))
+            core_grad.setColorAt(1.0, QColor(ar, ag, ab, 50))
+        elif design == "palladium":
+            # Incandescent warm tungsten core
+            core_grad.setColorAt(0.0, QColor(255, 220, 160, 230))
+            core_grad.setColorAt(0.45, QColor(35, 22, 12, 250))
+            core_grad.setColorAt(0.90, QColor(16, 12, 8, 254))
+            core_grad.setColorAt(1.0, QColor(ar, ag, ab, 45))
+        else:
+            core_grad.setColorAt(0.0, QColor(20, 22, 30, 246))
+            core_grad.setColorAt(0.85, QColor(10, 11, 16, 252))
+            core_grad.setColorAt(1.0, QColor(ar, ag, ab, 35))
+
         painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(QBrush(core_grad))
         painter.drawEllipse(QPointF(cx + gx * 0.5, cy + gy * 0.5), core_r, core_r)
 
         # Glowing Core Rim
         rim_alpha = min(255, int((110 + breath * 80 + self._audio_lvl * 60) * hover_boost))
-        rim_pen = QPen(QColor(ar, ag, ab, rim_alpha), 1.2)
+        rim_pen = QPen(QColor(ar, ag, ab, rim_alpha), 1.3)
         painter.setPen(rim_pen)
         painter.setBrush(Qt.BrushStyle.NoBrush)
         painter.drawEllipse(QPointF(cx + gx * 0.5, cy + gy * 0.5), core_r, core_r)
 
+        # EDITH Target Acquisition Reticle in Center
+        if design == "edith":
+            reticle_pen = QPen(QColor(sr, sg, sb, int(80 + breath * 70)), 0.8)
+            painter.setPen(reticle_pen)
+            r_d = 7.0
+            painter.drawPolygon([
+                QPointF(cx + gx, cy + gy - r_d),
+                QPointF(cx + gx + r_d, cy + gy),
+                QPointF(cx + gx, cy + gy + r_d),
+                QPointF(cx + gx - r_d, cy + gy)
+            ])
+
         # ── 5. Orbiting Micro-Particle Comet Trails ──
         for i in range(len(self._particle_trails)):
             trail = self._particle_trails[i]
+            col = (ar, ag, ab) if i % 2 == 0 else (sr, sg, sb)
             for t_idx, (px, py) in enumerate(trail):
                 frac = (t_idx + 1) / max(len(trail), 1)
                 t_alpha = min(255, int(frac * (50 + breath * 70) * hover_boost))
                 t_size = 0.5 + frac * 1.2
                 painter.setPen(Qt.PenStyle.NoPen)
-                painter.setBrush(QBrush(QColor(ar, ag, ab, t_alpha)))
+                painter.setBrush(QBrush(QColor(col[0], col[1], col[2], t_alpha)))
                 painter.drawEllipse(QPointF(px, py), t_size, t_size)
             if trail:
                 hx, hy = trail[-1]
                 head_alpha = min(255, int((120 + breath * 120) * hover_boost))
-                head_c = QColor(ar, ag, ab).lighter(140)
+                head_c = QColor(col[0], col[1], col[2]).lighter(140)
                 painter.setBrush(QBrush(QColor(head_c.red(), head_c.green(), head_c.blue(), head_alpha)))
                 painter.drawEllipse(QPointF(hx, hy), 1.6, 1.6)
 
-        # ── 6. Emblem: Hindi "ब्रह्मा" + Status Dot with Parallax ──
-        text_alpha = min(255, int((215 + breath * 40) * hover_boost))
-        painter.setPen(QPen(QColor(0, 0, 0, 180)))
-        painter.setFont(QFont("Nirmala UI", 11, QFont.Weight.Bold))
-        painter.drawText(QRectF(cx - 21.0 + gx, cy - 13.0 + gy, 44.0, 22.0), Qt.AlignmentFlag.AlignCenter, "\u092C\u094D\u0930\u0939\u094D\u092E\u093E")
+        # ── 6. Emblem: "FRIDAY" / "JARVIS" / "EDITH" + Status Beacon ──
+        try:
+            from memory import config_manager
+            persona = config_manager.get_voice_persona()
+            if design == "edith":
+                emblem_text = "EDITH"
+            elif persona == "jarvis":
+                emblem_text = "JARVIS"
+            else:
+                emblem_text = "FRIDAY"
+        except Exception:
+            emblem_text = "FRIDAY"
 
-        # Crisp glowing text
-        painter.setPen(QPen(QColor(ar, ag, ab, text_alpha)))
-        painter.setFont(QFont("Nirmala UI", 11, QFont.Weight.Bold))
-        painter.drawText(QRectF(cx - 22.0 + gx, cy - 14.0 + gy, 44.0, 22.0), Qt.AlignmentFlag.AlignCenter, "\u092C\u094D\u0930\u0939\u094D\u092E\u093E")
+        text_alpha = min(255, int((220 + breath * 35) * hover_boost))
+        # Crisp drop shadow
+        painter.setPen(QPen(QColor(0, 0, 0, 200)))
+        painter.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
+        painter.drawText(QRectF(cx - 28.0 + gx, cy - 11.0 + gy, 56.0, 22.0), Qt.AlignmentFlag.AlignCenter, emblem_text)
+
+        # Crisp glowing text in design color
+        text_color = QColor(ar, ag, ab, text_alpha)
+        if design == "mark_3":
+            # In Mark 3 armor, text is Stark Gold
+            text_color = QColor(sr, sg, sb, text_alpha)
+        painter.setPen(QPen(text_color))
+        painter.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
+        painter.drawText(QRectF(cx - 28.0 + gx, cy - 12.0 + gy, 56.0, 22.0), Qt.AlignmentFlag.AlignCenter, emblem_text)
 
         # Tiny breathing status beacon directly below text
         dot_alpha = min(255, int((150 + breath * 105) * hover_boost))
-        dot_color = QColor(ar, ag, ab, dot_alpha)
+        dot_c = (sr, sg, sb) if design == "mark_3" else (ar, ag, ab)
+        dot_color = QColor(dot_c[0], dot_c[1], dot_c[2], dot_alpha)
         painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(QBrush(dot_color))
         painter.drawEllipse(QPointF(cx + gx, cy + 12.0 + gy), 2.0, 2.0)
@@ -8141,12 +8529,28 @@ class FloatingLauncher(QWidget):
             "error": "Error",
         }.get(self._state, "Ready")
 
+    def set_microphone_active(self, active: bool):
+        self._microphone_active = bool(active)
+        self._apply_state_style()
+
     def _apply_state_style(self):
         self.setToolTip(
-            f"Brahma Echo ({self._status_line})\n"
+            f"Friday ({self._status_line})\n"
             "• Single-click: Chat Workspace\n"
             "• Double-click: Open Full App\n"
+            "• Microphone button: Start / stop listening\n"
             "• Drag: Move (Spring Snap)"
+        )
+        active = self._microphone_active
+        label = "Stop listening" if active else "Start listening"
+        self._listen_btn.setToolTip(label)
+        self._listen_btn.setAccessibleName(label)
+        self._listen_btn.setStyleSheet(
+            "QPushButton { background: " + ("#007f75" if active else "#15252b") + ";"
+            " border: 1px solid #00dbc5; border-radius: 14px; padding: 0; }"
+            "QPushButton:hover { background: #00685f; border-color: #7dffeb; }"
+            "QPushButton:pressed { background: #004e48; }"
+            "QPushButton:focus { border: 2px solid #ffffff; }"
         )
         self.update()
 
@@ -8177,7 +8581,7 @@ class FloatingLauncher(QWidget):
             }}
         """)
 
-        open_full = QAction("Open Brahma Echo (Full App)", self)
+        open_full = QAction("Open Friday (Full App)", self)
         open_full.triggered.connect(lambda: self.action_requested.emit("open_app"))
         menu.addAction(open_full)
 
@@ -8201,7 +8605,7 @@ class FloatingLauncher(QWidget):
         hide_act.triggered.connect(self.hide)
         menu.addAction(hide_act)
 
-        quit_act = QAction("Quit Brahma", self)
+        quit_act = QAction("Quit Friday", self)
         quit_act.triggered.connect(lambda: self.action_requested.emit("quit"))
         menu.addAction(quit_act)
 
@@ -8299,11 +8703,11 @@ class FloatingGestureCard(QWidget):
         self.lay.setSpacing(8)
         
         self.btn = QPushButton("🖐 Gestures")
-        self.btn.setFixedSize(100, 36)
+        self.btn.setFixedSize(100, 34)
         self.btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn.setStyleSheet(
-            "QPushButton { background: #0c0e12; color: #ffffff; border: 1px solid rgba(255, 179, 0, 0.20); border-radius: 8px; font-weight: bold; }"
-            "QPushButton:hover { color: #ffb300; border: 1px solid #ffb300; }"
+            "QPushButton { background: rgba(18, 22, 34, 0.70); color: #F5F5F7; border: 1px solid rgba(255, 255, 255, 0.10); border-radius: 9px; font-weight: 600; font-family: 'Segoe UI', -apple-system, sans-serif; font-size: 12px; }"
+            "QPushButton:hover { background: rgba(255, 255, 255, 0.12); border-color: rgba(255, 255, 255, 0.20); color: #FFFFFF; }"
         )
         self.btn.clicked.connect(self.toggle_preview)
         
@@ -8323,15 +8727,15 @@ class FloatingGestureCard(QWidget):
             self.preview.hide()
             self.preview._stop_camera()
             self.btn.setStyleSheet(
-                "QPushButton { background: #0c0e12; color: #ffffff; border: 1px solid rgba(255, 179, 0, 0.20); border-radius: 8px; font-weight: bold; }"
-                "QPushButton:hover { color: #ffb300; border: 1px solid #ffb300; }"
+                "QPushButton { background: rgba(18, 22, 34, 0.70); color: #F5F5F7; border: 1px solid rgba(255, 255, 255, 0.10); border-radius: 9px; font-weight: 600; font-family: 'Segoe UI', -apple-system, sans-serif; font-size: 12px; }"
+                "QPushButton:hover { background: rgba(255, 255, 255, 0.12); border-color: rgba(255, 255, 255, 0.20); color: #FFFFFF; }"
             )
         else:
             self.preview.show()
             self.preview._start_camera()
             self.btn.setStyleSheet(
-                "QPushButton { background: rgba(255, 179, 0, 0.15); color: #ffb300; border: 1px solid #ffb300; border-radius: 8px; font-weight: bold; }"
-                "QPushButton:hover { background: rgba(255, 179, 0, 0.25); }"
+                "QPushButton { background: rgba(10, 132, 255, 0.20); color: #0A84FF; border: 1px solid rgba(10, 132, 255, 0.50); border-radius: 9px; font-weight: 600; font-family: 'Segoe UI', -apple-system, sans-serif; font-size: 12px; }"
+                "QPushButton:hover { background: rgba(10, 132, 255, 0.30); }"
             )
         self.adjustSize()
         if self.window() and hasattr(self.window(), 'resizeEvent'):
@@ -8339,6 +8743,9 @@ class FloatingGestureCard(QWidget):
 
 
 class MainWindow(QMainWindow):
+    _voice_activate_sig = pyqtSignal()
+    _mute_request_sig = pyqtSignal(bool, bool)
+    ptt_changed = pyqtSignal(bool)
     _log_sig   = pyqtSignal(str)
     _state_sig = pyqtSignal(str)
     _scan_sig  = pyqtSignal(bool, str)
@@ -8361,12 +8768,21 @@ class MainWindow(QMainWindow):
     def _make_window_icon(self) -> QIcon:
         return _logo_icon()
 
+    def closeEvent(self, event):
+        # Do not kill Friday when [X] is clicked: stay alive in background with mic & hotkeys active
+        event.ignore()
+        self.hide()
+        try:
+            self.minimized.emit()
+        except Exception:
+            pass
+
     def __init__(self, face_path: str):
         super().__init__()
         self.setWindowFlag(Qt.WindowType.Tool, False)
         self.setWindowFlag(Qt.WindowType.Window, True)
         self.setWindowIcon(self._make_window_icon())
-        self.setWindowTitle("Brahma Echo")
+        self.setWindowTitle("FRIDAY — Created by Gaurav")
         self.setMinimumSize(_MIN_W, _MIN_H)
         self.resize(_DEFAULT_W, _DEFAULT_H)
 
@@ -8413,23 +8829,27 @@ class MainWindow(QMainWindow):
         self._taskbar = QWidget()
         self._taskbar.setStyleSheet("background: transparent;")
         taskbar_lay = QHBoxLayout(self._taskbar)
-        taskbar_lay.setContentsMargins(10, 10, 10, 10)
+        taskbar_lay.setContentsMargins(14, 10, 14, 10)
         
+        self._status_badge = QLabel("● ONLINE")
+        self._status_badge.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
+        self._status_badge.setStyleSheet(
+            "color: #30D158; background: rgba(48, 209, 88, 0.10); border: 1px solid rgba(48, 209, 88, 0.25); border-radius: 8px; padding: 5px 12px;"
+        )
+        taskbar_lay.addWidget(self._status_badge)
+        taskbar_lay.addStretch()
+
         self._btn_dashboard = QPushButton("Dashboard")
         self._btn_chat = QPushButton("Chat")
         self._btn_settings = QPushButton("Settings")
 
         for btn in (self._btn_dashboard, self._btn_chat, self._btn_settings):
             btn.setCursor(Qt.CursorShape.PointingHandCursor)
-            btn.setStyleSheet(f"QPushButton {{ background: rgba(12,14,18,200); color: {C.WHITE}; border: 1px solid {C.BORDER_B}; border-radius: 8px; padding: 5px 15px; font-weight: bold; font-family: 'Segoe UI'; font-size: 13px; }} QPushButton:hover {{ color: {C.PRI}; border: 1px solid {C.PRI}; }}")
+            btn.setStyleSheet(
+                "QPushButton { background: rgba(255, 255, 255, 0.04); color: rgba(255, 255, 255, 0.70); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 6px 16px; font-weight: 500; font-family: 'Segoe UI', -apple-system, sans-serif; font-size: 12px; }"
+                "QPushButton:hover { background: rgba(255, 255, 255, 0.09); color: #FFFFFF; border-color: rgba(255, 255, 255, 0.16); }"
+            )
         
-        self._status_badge = QLabel("● ONLINE")
-        self._status_badge.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
-        self._status_badge.setStyleSheet(
-            f"color: {C.PRI}; background: rgba(12,14,18,220); border: 1px solid {C.BORDER_B}; border-radius: 8px; padding: 5px 12px;"
-        )
-        taskbar_lay.addWidget(self._status_badge)
-        taskbar_lay.addStretch()
         taskbar_lay.addWidget(self._btn_dashboard)
         taskbar_lay.addWidget(self._btn_chat)
         taskbar_lay.addWidget(self._btn_settings)
@@ -8460,14 +8880,15 @@ class MainWindow(QMainWindow):
         self._clock_tmr.start(1000)
         self._tick_clock()
 
-        # Metrik gÃ¼ncelleme timer'Ä±
+        # Metrik güncelleme timer'ı
         self._metric_tmr = QTimer(self)
         self._metric_tmr.timeout.connect(self._update_metrics)
-        self._metric_tmr.start(2000)
+        self._metric_tmr.start(5000)
         self._update_metrics()
 
         self._log_sig.connect(self._on_log_text)
         self._state_sig.connect(self._apply_state)
+        self._mute_request_sig.connect(lambda muted, wake: self.set_muted_state(muted, wakeword=wake), Qt.ConnectionType.QueuedConnection)
         self._briefing_sig.connect(self._apply_daily_briefing)
         self._briefing_hide_sig.connect(self._schedule_daily_briefing_hide)
         self._attention_sig.connect(self._show_attention_alert)
@@ -8504,8 +8925,6 @@ class MainWindow(QMainWindow):
             self._apply_state("LISTENING")
         else:
             self._show_setup(self._load_api_defaults())
-        self._scan_sig.connect(self._apply_scan_state)
-
         sc_mute = QShortcut(QKeySequence("F4"), self)
         sc_mute.activated.connect(self._toggle_mute)
         sc_full = QShortcut(QKeySequence("F11"), self)
@@ -8515,11 +8934,63 @@ class MainWindow(QMainWindow):
         sc_right = QShortcut(QKeySequence("Ctrl+]"), self)
         sc_right.activated.connect(self._toggle_right_sidebar)
 
+        # ── Enhanced Hotkeys ───────────────────────────────────────────
+        # Ctrl+M  → Mute / Unmute microphone
+        QShortcut(QKeySequence("Ctrl+M"), self).activated.connect(self._toggle_mute)
+        # Ctrl+L  → Focus the chat text input (open chat panel first if needed)
+        QShortcut(QKeySequence("Ctrl+L"), self).activated.connect(self._hotkey_focus_chat)
+        # Ctrl+D  → Switch to Dashboard
+        QShortcut(QKeySequence("Ctrl+D"), self).activated.connect(self._on_nav_dashboard)
+        # Ctrl+Shift+S → Open Settings
+        QShortcut(QKeySequence("Ctrl+Shift+S"), self).activated.connect(self._on_nav_settings)
+        # Ctrl+N  → New Conversation (clear chat + start fresh)
+        QShortcut(QKeySequence("Ctrl+N"), self).activated.connect(self._hotkey_new_conversation)
+        # Ctrl+W  → Close / hide right panel
+        QShortcut(QKeySequence("Ctrl+W"), self).activated.connect(self._hotkey_close_right)
+        # Ctrl+Shift+M → Open main window (in case it was hidden to tray)
+        QShortcut(QKeySequence("Ctrl+Shift+M"), self).activated.connect(self.show)
+        # Escape → Hide right sidebar (if open)
+        sc_esc = QShortcut(QKeySequence("Escape"), self)
+        sc_esc.setContext(Qt.ShortcutContext.WindowShortcut)
+        sc_esc.activated.connect(self._hotkey_escape)
+
     def _toggle_fullscreen(self):
         if self.isFullScreen():
             self.showNormal()
         else:
             self.showFullScreen()
+
+    # ── Hotkey Handlers ────────────────────────────────────────────────────
+    def _hotkey_focus_chat(self):
+        """Ctrl+L — open chat panel and focus the text input."""
+        if self._right_collapsed:
+            self._toggle_right_sidebar()
+        QTimer.singleShot(80, lambda: (
+            getattr(self._inline_workspace, "focus_input", lambda: None)()
+            if hasattr(self, "_inline_workspace") else None
+        ))
+
+    def _hotkey_new_conversation(self):
+        """Ctrl+N — start a brand-new conversation."""
+        try:
+            if hasattr(self, "_inline_workspace") and hasattr(self._inline_workspace, "_new_conversation"):
+                self._inline_workspace._new_conversation()
+            elif hasattr(self, "_inline_workspace") and hasattr(self._inline_workspace, "_feed"):
+                self._inline_workspace._feed.clear_messages()
+        except Exception:
+            pass
+
+    def _hotkey_close_right(self):
+        """Ctrl+W — collapse right sidebar if open."""
+        if not self._right_collapsed:
+            self._toggle_right_sidebar()
+
+    def _hotkey_escape(self):
+        """Escape — collapse right sidebar if open, or clear focus."""
+        if not self._right_collapsed:
+            self._toggle_right_sidebar()
+        else:
+            self.setFocus()
 
     def _load_app_settings(self) -> dict:
         if self._app_settings_cache is not None:
@@ -8722,13 +9193,10 @@ class MainWindow(QMainWindow):
                 winreg.HKEY_CURRENT_USER,
                 _startup_registry_key(),
                 0,
-                winreg.KEY_READ | winreg.KEY_WRITE,
+                winreg.KEY_READ,
             ) as key:
                 try:
-                    value, _ = winreg.QueryValueEx(key, "Brahma Echo")
-                    run_value = _startup_run_value()
-                    if value != run_value:
-                        winreg.SetValueEx(key, "Brahma Echo", 0, winreg.REG_SZ, run_value)
+                    value, _ = winreg.QueryValueEx(key, "Friday")
                     return bool(value)
                 except FileNotFoundError:
                     return False
@@ -8742,10 +9210,10 @@ class MainWindow(QMainWindow):
         try:
             with winreg.CreateKey(winreg.HKEY_CURRENT_USER, _startup_registry_key()) as key:
                 if enabled:
-                    winreg.SetValueEx(key, "Brahma Echo", 0, winreg.REG_SZ, run_value)
+                    winreg.SetValueEx(key, "Friday", 0, winreg.REG_SZ, run_value)
                 else:
                     try:
-                        winreg.DeleteValue(key, "Brahma Echo")
+                        winreg.DeleteValue(key, "Friday")
                     except FileNotFoundError:
                         pass
             return True
@@ -8779,6 +9247,8 @@ class MainWindow(QMainWindow):
         self._apply_sidebar_state()
 
     def _toggle_right_sidebar(self):
+        if self._current_page != "dashboard":
+            self._set_page("dashboard")
         self._right_collapsed = not self._right_collapsed
         self._apply_sidebar_state()
         if not self._right_collapsed and hasattr(self, "_inline_workspace"):
@@ -8797,7 +9267,7 @@ class MainWindow(QMainWindow):
             if self._right_collapsed:
                 self._right_panel.setVisible(False)
             else:
-                self._right_panel.setVisible(True)
+                self._right_panel.setVisible(self._current_page == "dashboard")
                 self._right_panel.setFixedWidth(_RIGHT_W)
         if hasattr(self, "_right_content"):
             self._right_content.setVisible(not self._right_collapsed)
@@ -8817,34 +9287,30 @@ class MainWindow(QMainWindow):
         self.resizeEvent(None)
 
     def _on_nav_dashboard(self):
-        if hasattr(self, "_center_stack"):
-            self._center_stack.setCurrentIndex(0)
-        self._update_nav_styles()
+        self._set_page("dashboard")
 
     def _on_nav_settings(self):
-        if hasattr(self, "_center_stack"):
-            self._center_stack.setCurrentIndex(4)
-        self._update_nav_styles()
+        self._set_page("settings")
 
     def _update_nav_styles(self):
         cur_idx = self._center_stack.currentIndex() if hasattr(self, "_center_stack") else 0
         if hasattr(self, "_btn_dashboard"):
             if cur_idx == 0:
                 self._btn_dashboard.setStyleSheet(
-                    f"QPushButton {{ background: rgba(255, 179, 0, 0.18); color: {C.PRI}; border: 1px solid {C.PRI}; border-radius: 8px; padding: 5px 15px; font-weight: bold; font-family: 'Segoe UI'; font-size: 13px; }}"
+                    "QPushButton { background: rgba(255, 255, 255, 0.14); color: #FFFFFF; border: 1px solid rgba(255, 255, 255, 0.22); border-radius: 8px; padding: 6px 16px; font-weight: 600; font-family: 'Segoe UI', -apple-system, sans-serif; font-size: 12px; }"
                 )
             else:
                 self._btn_dashboard.setStyleSheet(
-                    f"QPushButton {{ background: rgba(12,14,18,200); color: {C.WHITE}; border: 1px solid {C.BORDER_B}; border-radius: 8px; padding: 5px 15px; font-weight: bold; font-family: 'Segoe UI'; font-size: 13px; }} QPushButton:hover {{ color: {C.PRI}; border: 1px solid {C.PRI}; }}"
+                    "QPushButton { background: rgba(255, 255, 255, 0.04); color: rgba(255, 255, 255, 0.70); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 6px 16px; font-weight: 500; font-family: 'Segoe UI', -apple-system, sans-serif; font-size: 12px; } QPushButton:hover { background: rgba(255, 255, 255, 0.09); color: #FFFFFF; border-color: rgba(255, 255, 255, 0.16); }"
                 )
         if hasattr(self, "_btn_settings"):
             if cur_idx in (3, 4):
                 self._btn_settings.setStyleSheet(
-                    f"QPushButton {{ background: rgba(255, 179, 0, 0.18); color: {C.PRI}; border: 1px solid {C.PRI}; border-radius: 8px; padding: 5px 15px; font-weight: bold; font-family: 'Segoe UI'; font-size: 13px; }}"
+                    "QPushButton { background: rgba(255, 255, 255, 0.14); color: #FFFFFF; border: 1px solid rgba(255, 255, 255, 0.22); border-radius: 8px; padding: 6px 16px; font-weight: 600; font-family: 'Segoe UI', -apple-system, sans-serif; font-size: 12px; }"
                 )
             else:
                 self._btn_settings.setStyleSheet(
-                    f"QPushButton {{ background: rgba(12,14,18,200); color: {C.WHITE}; border: 1px solid {C.BORDER_B}; border-radius: 8px; padding: 5px 15px; font-weight: bold; font-family: 'Segoe UI'; font-size: 13px; }} QPushButton:hover {{ color: {C.PRI}; border: 1px solid {C.PRI}; }}"
+                    "QPushButton { background: rgba(255, 255, 255, 0.04); color: rgba(255, 255, 255, 0.70); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 6px 16px; font-weight: 500; font-family: 'Segoe UI', -apple-system, sans-serif; font-size: 12px; } QPushButton:hover { background: rgba(255, 255, 255, 0.09); color: #FFFFFF; border-color: rgba(255, 255, 255, 0.16); }"
                 )
 
 
@@ -8861,6 +9327,7 @@ class MainWindow(QMainWindow):
         if hasattr(self, "_center_stack") and isinstance(self._center_stack, QStackedWidget):
             index = {"dashboard": 0, "home": 1, "devices": 2, "settings": 3}.get(page, 0)
             self._center_stack.setCurrentIndex(index)
+            self._update_nav_styles()
         if page == "devices" and hasattr(self, "_devices_page"):
             try:
                 self._devices_page.refresh()
@@ -8877,10 +9344,10 @@ class MainWindow(QMainWindow):
             except Exception:
                 pass
         if hasattr(self, "_right_panel"):
-            self._right_panel.setVisible(page == "dashboard")
+            self._right_panel.setVisible(page == "dashboard" and not self._right_collapsed)
         if hasattr(self, "_right_stack") and isinstance(self._right_stack, QStackedWidget):
             self._right_stack.setCurrentIndex({"dashboard": 0, "settings": 1, "home": 2}.get(page, 2))
-            self._right_stack.setVisible(page == "dashboard")
+            self._right_stack.setVisible(page == "dashboard" and not self._right_collapsed)
         if self._settings_bridge and hasattr(self._settings_bridge, "set_dashboard_page"):
             try:
                 self._settings_bridge.set_dashboard_page(page == "dashboard")
@@ -8897,12 +9364,28 @@ class MainWindow(QMainWindow):
             except Exception:
                 pass
 
-    def set_brahma_connect_service(self, service):
+    def set_friday_connect_service(self, service):
+        self._friday_connect = service
         self._brahma_connect = service
         if hasattr(self, "_devices_page"):
             self._devices_page.set_service(service)
             if service is not None:
                 self._devices_page.refresh(force=True)
+    set_brahma_connect_service = set_friday_connect_service
+    def _old_set_brahma_connect_service(self, service):
+        self._brahma_connect = service
+        if hasattr(self, "_devices_page"):
+            self._devices_page.set_service(service)
+            if service is not None:
+                self._devices_page.refresh(force=True)
+
+    def update_voice_selector(self, persona: str):
+        if hasattr(self, "_settings_page") and hasattr(self._settings_page, "update_voice_selector"):
+            self._settings_page.update_voice_selector(persona)
+
+    def update_stark_design_selector(self, design_key: str):
+        if hasattr(self, "_settings_page") and hasattr(self._settings_page, "update_stark_design_selector"):
+            self._settings_page.update_stark_design_selector(design_key)
 
     def resizeEvent(self, event):
         if event:
@@ -9035,7 +9518,7 @@ class MainWindow(QMainWindow):
 
     def _browse_attachment(self):
         path, _ = QFileDialog.getOpenFileName(
-            self, "Attach a file to Brahma Echo", str(Path.home()),
+            self, "Attach a file to Friday", str(Path.home()),
             "All Files (*.*);;"
             "Images (*.jpg *.jpeg *.png *.gif *.webp *.bmp *.svg);;"
             "Documents (*.pdf *.docx *.txt *.md *.pptx);;"
@@ -9048,17 +9531,32 @@ class MainWindow(QMainWindow):
         if path:
             self._on_file_selected(path)
 
+    def _on_file_selected(self, path: str):
+        candidate = Path(path)
+        if not candidate.is_file():
+            self._log_sig.emit("ERR: Attachment no longer exists.")
+            return
+        self._current_file = str(candidate.resolve())
+        if hasattr(self, "_dashboard"):
+            self._dashboard.set_attachment(self._current_file)
+            self._dashboard.input.setFocus()
+
+    def _clear_attachment(self):
+        self._current_file = None
+        if hasattr(self, "_dashboard"):
+            self._dashboard.set_attachment(None)
+
     def _toggle_mute(self):
         self._muted = not self._muted
         self._wakeword_listening = self._muted
         self.hud.muted = self._muted
         self._style_mute_btn()
         if self._muted:
-            self._apply_state("MUTED")
+            self._state_sig.emit("MUTED")
             self._log.append_log("SYS: Microphone muted.")
             sound_mgr.play_listening_stop()
         else:
-            self._apply_state("LISTENING")
+            self._state_sig.emit("LISTENING")
             self._log.append_log("SYS: Microphone active.")
             sound_mgr.play_listening_start()
 
@@ -9071,11 +9569,11 @@ class MainWindow(QMainWindow):
         self._wakeword_listening = bool(muted)
         self._style_mute_btn()
         if self._muted:
-            self._apply_state("MUTED")
+            self._state_sig.emit("MUTED")
             self._log.append_log("SYS: Microphone muted.")
             sound_mgr.play_listening_stop()
         else:
-            self._apply_state("LISTENING")
+            self._state_sig.emit("LISTENING")
             self._log.append_log("SYS: Microphone active.")
             sound_mgr.play_listening_start()
 
@@ -9112,6 +9610,9 @@ class MainWindow(QMainWindow):
         txt = (txt or "").strip()
         if not txt:
             return
+        if not self.on_text_command:
+            self._log_sig.emit("ERR: Friday is still starting. Try again shortly.")
+            return
         self._chat_source_queue.append(source or "local")
         if hasattr(self, "_command_card"):
             preview = txt[:60] + ("…" if len(txt) > 60 else "")
@@ -9127,6 +9628,8 @@ class MainWindow(QMainWindow):
 
     def _on_log_text(self, text: str):
         self._log.append_log(text)
+        if hasattr(self, "_dashboard"):
+            self._dashboard.append_log(text)
         raw = (text or "").strip()
         low = raw.lower()
         if hasattr(self, "_result_card") and low.startswith("you:"):
@@ -9137,7 +9640,7 @@ class MainWindow(QMainWindow):
                     self.on_chat_event({"role": "user", "text": user_msg, "source": source})
                 except Exception:
                     pass
-        if hasattr(self, "_result_card") and low.startswith("brahma echo:"):
+        if hasattr(self, "_result_card") and low.startswith("friday:"):
             reply = raw.split(":", 1)[1].strip()
             self._result_card.set_body(reply[:80] + ("…" if len(reply) > 80 else ""))
             self._result_card.hide()
@@ -9407,7 +9910,7 @@ class MainWindow(QMainWindow):
     def notify_phone_connected(self):
         if self._remote_overlay is not None:
             self._remote_overlay.mark_connected()
-        self._log_sig.emit("SYS: Phone connected to Brahma Echo remote.")
+        self._log_sig.emit("SYS: Phone connected to Friday remote.")
 
     def changeEvent(self, event):
         super().changeEvent(event)
@@ -9429,6 +9932,8 @@ class MainWindow(QMainWindow):
 
     def _apply_state(self, state: str):
         self._state = state
+        if hasattr(self, "_dashboard"):
+            self._dashboard.set_state(state)
         if hasattr(self, "_bg_widget") and hasattr(self._bg_widget, "set_ai_state"):
             self._bg_widget.set_ai_state(state)
         elif hasattr(self, "centralWidget") and hasattr(self.centralWidget(), "set_ai_state"):
@@ -9456,21 +9961,21 @@ class MainWindow(QMainWindow):
         if hasattr(self, "_input"):
             ph_map = {
                 "LISTENING": "Listening... (or type your command)",
-                "SPEAKING": "Brahma Echo is responding...",
-                "THINKING": "Brahma is thinking...",
+                "SPEAKING": "Friday is responding...",
+                "THINKING": "Friday is thinking...",
                 "PROCESSING": "Processing request...",
                 "EXECUTING": "Executing action...",
                 "WORKING": "Working on it...",
                 "MUTED": "Microphone muted — type command here...",
                 "SCANNING": "Scanning display...",
             }
-            self._input.setPlaceholderText(ph_map.get(state, "Ask Brahma Echo anything..."))
+            self._input.setPlaceholderText(ph_map.get(state, "Ask Friday anything..."))
 
         # Update chat workspace footer status
         if hasattr(self, "_inline_workspace") and hasattr(self._inline_workspace, "_footer_status"):
             foot_map = {
                 "LISTENING": "● Listening for voice command...",
-                "SPEAKING": "● Brahma is speaking...",
+                "SPEAKING": "● Friday is speaking...",
                 "THINKING": "● Thinking...",
                 "PROCESSING": "● Processing...",
                 "EXECUTING": "● Executing system command...",
@@ -9478,7 +9983,7 @@ class MainWindow(QMainWindow):
                 "MUTED": "● Voice input muted",
                 "SCANNING": "● Vision system active",
             }
-            self._inline_workspace._footer_status.setText(foot_map.get(state, "Brahma Echo is online"))
+            self._inline_workspace._footer_status.setText(foot_map.get(state, "Friday is online"))
 
         if hasattr(self, "_status_chip"):
             chip_text = {
@@ -9504,13 +10009,13 @@ class MainWindow(QMainWindow):
             )
         if hasattr(self, "_task_card"):
             if state in ("THINKING", "PROCESSING", "EXECUTING", "WORKING"):
-                self._task_card.set_task("Working on it...", "Brahma Echo is processing your request.", 72)
+                self._task_card.set_task("Working on it...", "Friday is processing your request.", 72)
             elif state == "SPEAKING":
-                self._task_card.set_task("Responding...", "Brahma Echo is speaking now.", 100)
+                self._task_card.set_task("Responding...", "Friday is speaking now.", 100)
             elif state == "MUTED":
                 self._task_card.set_task("Microphone muted", "Voice input is paused.", 0)
             else:
-                self._task_card.set_task("Ready", "Brahma Echo is idle and ready.", 0)
+                self._task_card.set_task("Ready", "Friday is idle and ready.", 0)
         if hasattr(self, "_result_card"):
             if state in ("THINKING", "PROCESSING", "EXECUTING", "WORKING"):
                 self._result_card.set_body("Action pending")
@@ -9762,7 +10267,7 @@ class MainWindow(QMainWindow):
                 self._floating_gesture_card.show()
             self.showNormal()
             self._apply_state("LISTENING")
-            self._log.append_log(f"SYS: Initialised. OS={os_name.upper()}. Brahma Echo online.")
+            self._log.append_log(f"SYS: Initialised. OS={os_name.upper()}. Friday online.")
         except Exception as e:
             self._log.append_log(f"ERR: setup failed: {e}")
             traceback.print_exc()
@@ -9806,8 +10311,8 @@ class MainWindow(QMainWindow):
         self._developer_card.hide()
         self._developer_status_lbl = QLabel(self._hidden_legacy_container)
 
-        self._hud_result_wing = BrahmaResultWing(self)
-        self._hud_telemetry_wing = BrahmaTelemetryWing(self)
+        self._hud_result_wing = FridayResultWing(self)
+        self._hud_telemetry_wing = FridayTelemetryWing(self)
         self._command_card = self._hud_result_wing
         self._result_card = self._hud_telemetry_wing
 
@@ -9846,8 +10351,8 @@ class MainWindow(QMainWindow):
         cmd_lay.addLayout(self._build_command_row())
         stage.addWidget(self._command_panel)
 
-        self._home_page = BrahmaHomePage()
-        self._devices_page = BrahmaConnectDevicesPage(self)
+        self._home_page = FridayHomePage()
+        self._devices_page = FridayConnectDevicesPage(self)
         self._center_stack = QStackedWidget()
         self._center_stack.setStyleSheet("background: transparent; border: none;")
         self._center_stack.addWidget(w)
@@ -9856,9 +10361,6 @@ class MainWindow(QMainWindow):
         self._settings_page = SystemConnectivityPage()
         self._center_stack.addWidget(self._settings_page)
         
-        self._settings_hub_page = SettingsHubPage(lambda idx: self._center_stack.setCurrentIndex(idx))
-        self._center_stack.addWidget(self._settings_hub_page)
-
         self._center_stack.setCurrentIndex(0)
         return self._center_stack
 
@@ -9868,10 +10370,12 @@ class MainWindow(QMainWindow):
         w.setObjectName("ModularRightSidebar")
         w.setFixedWidth(_RIGHT_W)
         w.setStyleSheet(
-            f"QWidget#ModularRightSidebar {{ "
-            f"  background: rgba(8, 10, 15, 0.22); "
-            f"  border-left: 1px solid rgba(255, 179, 0, 0.25); "
-            f"}}"
+            """
+            QWidget#ModularRightSidebar {
+                background: rgba(12, 16, 26, 0.65);
+                border-left: 1px solid rgba(255, 255, 255, 0.08);
+            }
+            """
         )
         root_lay = QVBoxLayout(w)
         root_lay.setContentsMargins(14, 12, 14, 12)
@@ -9884,24 +10388,36 @@ class MainWindow(QMainWindow):
 
         pulse_dot = QLabel("●")
         pulse_dot.setFont(QFont("Segoe UI", 10))
-        pulse_dot.setStyleSheet("color: #37ff5f; background: transparent;")
+        pulse_dot.setStyleSheet("color: #30D158; background: transparent;")
         header_bar.addWidget(pulse_dot)
 
-        header_title = QLabel("BRAHMA CHAT")
+        header_title = QLabel("FRIDAY CHAT")
         header_title.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
-        header_title.setStyleSheet(f"color: {C.WHITE}; background: transparent; letter-spacing: 1px;")
+        header_title.setStyleSheet("color: #F5F5F7; background: transparent; letter-spacing: 0.5px;")
         header_bar.addWidget(header_title)
 
         header_bar.addStretch(1)
 
         self._new_chat_btn = QPushButton("+ New")
-        self._new_chat_btn.setFixedSize(54, 28)
+        self._new_chat_btn.setFixedSize(56, 28)
         self._new_chat_btn.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
         self._new_chat_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._new_chat_btn.setToolTip("Start a new chat session")
         self._new_chat_btn.setStyleSheet(
-            f"QPushButton {{ background: rgba(255, 179, 0, 0.10); color: {C.PRI}; border: 1px solid rgba(255, 179, 0, 0.30); border-radius: 6px; padding: 2px 6px; }}"
-            f"QPushButton:hover {{ background: rgba(255, 179, 0, 0.22); color: #FFFFFF; border-color: {C.PRI}; }}"
+            """
+            QPushButton {
+                background: rgba(255, 255, 255, 0.06);
+                color: #F5F5F7;
+                border: 1px solid rgba(255, 255, 255, 0.10);
+                border-radius: 7px;
+                padding: 2px 8px;
+            }
+            QPushButton:hover {
+                background: rgba(255, 255, 255, 0.12);
+                border-color: rgba(255, 255, 255, 0.18);
+                color: #FFFFFF;
+            }
+            """
         )
         self._new_chat_btn.clicked.connect(lambda: self._inline_workspace.new_conversation() if hasattr(self, "_inline_workspace") else None)
         header_bar.addWidget(self._new_chat_btn)
@@ -9912,8 +10428,19 @@ class MainWindow(QMainWindow):
         self._right_toggle_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._right_toggle_btn.setToolTip("Collapse Chat Sidebar")
         self._right_toggle_btn.setStyleSheet(
-            f"QPushButton {{ background: rgba(255,255,255,0.06); color: {C.WHITE}; border: 1px solid rgba(255,255,255,0.12); border-radius: 6px; }}"
-            f"QPushButton:hover {{ color: {C.PRI}; border-color: {C.PRI}; background: rgba(255,179,0,0.12); }}"
+            """
+            QPushButton {
+                background: rgba(255, 255, 255, 0.05);
+                color: #F5F5F7;
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                border-radius: 7px;
+            }
+            QPushButton:hover {
+                color: #0A84FF;
+                border-color: rgba(10, 132, 255, 0.40);
+                background: rgba(10, 132, 255, 0.10);
+            }
+            """
         )
         self._right_toggle_btn.clicked.connect(self._toggle_right_sidebar)
         header_bar.addWidget(self._right_toggle_btn)
@@ -9953,102 +10480,119 @@ class MainWindow(QMainWindow):
         wrapper.setSpacing(0)
 
         bar = QFrame()
-        bar.setFixedHeight(84)
+        bar.setFixedHeight(72)
         bar.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         bar.setStyleSheet(
-            f"""
-            QFrame {{
-                background: rgba(255, 255, 255, 0.05);
-                border: 1px solid rgba(255, 179, 0, 0.20);
-                border-radius: 35px;
-            }}
+            """
+            QFrame {
+                background: rgba(18, 22, 34, 0.72);
+                border: 1px solid rgba(255, 255, 255, 0.10);
+                border-top: 1px solid rgba(255, 255, 255, 0.16);
+                border-radius: 28px;
+            }
             """
         )
         try:
             shadow = QGraphicsDropShadowEffect(bar)
-            shadow.setBlurRadius(24)
-            shadow.setColor(QColor(255, 179, 0, 45))
-            shadow.setOffset(0, 0)
+            shadow.setBlurRadius(32)
+            shadow.setColor(QColor(0, 0, 0, 100))
+            shadow.setOffset(0, 4)
             bar.setGraphicsEffect(shadow)
         except Exception:
             pass
         row = QHBoxLayout(bar)
-        row.setContentsMargins(18, 16, 18, 16)
-        row.setSpacing(12)
+        row.setContentsMargins(16, 12, 16, 12)
+        row.setSpacing(10)
 
         self._input = QLineEdit()
-        self._input.setPlaceholderText("Ask Brahma Echo anything...")
+        self._input.setPlaceholderText("Ask Friday anything...")
         self._input.setFont(QFont("Segoe UI", 10))
-        self._input.setFixedHeight(50)
-        self._input.setStyleSheet(f"""
-            QLineEdit {{
+        self._input.setFixedHeight(46)
+        self._input.setStyleSheet("""
+            QLineEdit {
                 background: transparent;
-                color: {C.WHITE};
+                color: #F5F5F7;
                 border: none;
                 padding: 0 14px;
-                selection-background-color: rgba(255, 179, 0, 0.25);
-            }}
+                selection-background-color: rgba(10, 132, 255, 0.35);
+            }
         """)
         self._input.returnPressed.connect(self._send)
         row.addWidget(self._input, stretch=1)
 
-        icon_button_style = f"""
-            QPushButton {{
-                background: transparent;
-                color: {C.WHITE};
-                border: none;
-                border-radius: 22px;
-            }}
-            QPushButton:hover {{
-                background: rgba(255, 179, 0, 0.15);
-                color: {C.PRI};
-            }}
-            QPushButton:pressed {{
-                background: rgba(255, 179, 0, 0.30);
-            }}
+        icon_button_style = """
+            QPushButton {
+                background: rgba(255, 255, 255, 0.04);
+                color: #F5F5F7;
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                border-radius: 20px;
+            }
+            QPushButton:hover {
+                background: rgba(255, 255, 255, 0.10);
+                border-color: rgba(255, 255, 255, 0.18);
+                color: #FFFFFF;
+            }
+            QPushButton:pressed {
+                background: rgba(255, 255, 255, 0.16);
+            }
         """
 
         attach = QPushButton()
-        attach.setFixedSize(44, 44)
+        attach.setFixedSize(40, 40)
         attach.setCursor(Qt.CursorShape.PointingHandCursor)
         attach.setToolTip("Attach file")
-        attach.setIcon(QIcon(_icon_pixmap("attach", 20)))
-        attach.setIconSize(QSize(20, 20))
+        attach.setIcon(QIcon(_icon_pixmap("attach", 18)))
+        attach.setIconSize(QSize(18, 18))
         attach.setStyleSheet(icon_button_style)
         attach.clicked.connect(self._browse_attachment)
         row.addWidget(attach)
 
         mic = QPushButton()
-        mic.setFixedSize(44, 44)
+        mic.setFixedSize(40, 40)
         mic.setCursor(Qt.CursorShape.PointingHandCursor)
         mic.setToolTip("Microphone")
-        mic.setIcon(QIcon(_icon_pixmap("mic", 20)))
-        mic.setIconSize(QSize(20, 20))
-        mic.setStyleSheet(f"""
-            QPushButton {{
-                background: rgba(255, 179, 0, 0.10);
-                color: {C.PRI};
-                border: 1px solid rgba(255, 179, 0, 0.30);
-                border-radius: 22px;
-            }}
-            QPushButton:hover {{
-                background: rgba(255, 179, 0, 0.25);
-                border: 1px solid rgba(255, 179, 0, 0.60);
-            }}
-            QPushButton:pressed {{
-                background: rgba(255, 179, 0, 0.40);
-            }}
+        mic.setIcon(QIcon(_icon_pixmap("mic", 18)))
+        mic.setIconSize(QSize(18, 18))
+        mic.setStyleSheet("""
+            QPushButton {
+                background: rgba(255, 255, 255, 0.05);
+                color: #F5F5F7;
+                border: 1px solid rgba(255, 255, 255, 0.10);
+                border-radius: 20px;
+            }
+            QPushButton:hover {
+                background: rgba(10, 132, 255, 0.20);
+                border: 1px solid rgba(10, 132, 255, 0.45);
+                color: #FFFFFF;
+            }
+            QPushButton:pressed {
+                background: rgba(10, 132, 255, 0.35);
+            }
         """)
         mic.clicked.connect(self._toggle_mute)
         row.addWidget(mic)
 
         self._send_btn = QPushButton()
-        self._send_btn.setFixedSize(44, 44)
+        self._send_btn.setFixedSize(40, 40)
         self._send_btn.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
         self._send_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._send_btn.setIcon(QIcon(_icon_pixmap("send", 20)))
-        self._send_btn.setIconSize(QSize(20, 20))
-        self._send_btn.setStyleSheet(icon_button_style)
+        self._send_btn.setIcon(QIcon(_icon_pixmap("send", 18)))
+        self._send_btn.setIconSize(QSize(18, 18))
+        self._send_btn.setStyleSheet("""
+            QPushButton {
+                background: #0A84FF;
+                color: #FFFFFF;
+                border: 1px solid rgba(255, 255, 255, 0.16);
+                border-radius: 20px;
+            }
+            QPushButton:hover {
+                background: #0071E3;
+                border-color: rgba(255, 255, 255, 0.30);
+            }
+            QPushButton:pressed {
+                background: #0058B6;
+            }
+        """)
         self._send_btn.clicked.connect(self._send)
         row.addWidget(self._send_btn)
 
@@ -10141,7 +10685,7 @@ class SystemConnectivitySidebar(QFrame):
         self._quick_actions = QVBoxLayout()
         self._quick_actions.setSpacing(10)
         lay.addLayout(self._quick_actions)
-        self._mk_quick_action("Γå╗ Restart Brahma Echo", QStyle.StandardPixmap.SP_BrowserReload, self._restart)
+        self._mk_quick_action("Γå╗ Restart Friday", QStyle.StandardPixmap.SP_BrowserReload, self._restart)
         self._mk_quick_action("Γƒ│ Reload Configuration", QStyle.StandardPixmap.SP_BrowserReload, self._reload)
         self._mk_quick_action("≡ƒôü Open Data Folder", QStyle.StandardPixmap.SP_DirOpenIcon, self._open_data_folder)
         self._mk_quick_action("≡ƒôä View Logs", QStyle.StandardPixmap.SP_FileDialogDetailedView, self._view_logs)
@@ -10210,7 +10754,7 @@ class SystemConnectivitySidebar(QFrame):
 
     def refresh(self):
         if self._bridge() and hasattr(self._bridge(), "_win"):
-            version = "v1.0.0"
+            version = "v1.0.1"
             platform_name = platform.system()
             provider = self._bridge()._win._load_app_settings().get("default_ai_provider", "Gemini")
             last_updated = time.strftime("%d %b %Y %H:%M")
@@ -10219,7 +10763,7 @@ class SystemConnectivitySidebar(QFrame):
             self._info_rows["Current AI Provider"].setText(provider)
             self._info_rows["Last Updated"].setText(last_updated)
         else:
-            self._info_rows["Version"].setText("v1.0.0")
+            self._info_rows["Version"].setText("v1.0.1")
             self._info_rows["Platform"].setText(platform.system())
             self._info_rows["Current AI Provider"].setText("Gemini")
             self._info_rows["Last Updated"].setText(time.strftime("%d %b %Y %H:%M"))
@@ -10230,161 +10774,148 @@ class SettingsHubPage(QWidget):
     def __init__(self, navigation_callback, parent=None):
         super().__init__(parent)
         self._nav_cb = navigation_callback
-        lay = QVBoxLayout(self)
-        lay.setContentsMargins(40, 60, 40, 60)
-        lay.setSpacing(25)
+        self.setObjectName("SettingsHubPage")
+        self.setStyleSheet(f"""
+            QWidget#SettingsHubPage {{ background: transparent; }}
+            QFrame#SettingsHero, QFrame#SettingsSection {{
+                background: rgba(20, 27, 42, 0.68);
+                border: 1px solid rgba(255, 255, 255, 0.11);
+                border-radius: 22px;
+            }}
+            QFrame#SettingsSection:hover {{
+                background: rgba(29, 41, 65, 0.82);
+                border: 1px solid rgba(10, 132, 255, 0.56);
+            }}
+        """)
 
-        title = QLabel("Settings Hub")
-        title.setFont(QFont("Segoe UI", 32, QFont.Weight.Black))
-        title.setStyleSheet(f"color: {C.WHITE}; letter-spacing: 1px;")
-        title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        lay.addWidget(title)
+        root = QVBoxLayout(self)
+        root.setContentsMargins(28, 28, 28, 28)
+        root.setSpacing(16)
 
-        subtitle = QLabel("Select a section below to configure your Brahma Echo environment.")
-        subtitle.setFont(QFont("Segoe UI", 12))
+        hero = QFrame()
+        hero.setObjectName("SettingsHero")
+        hero_lay = QHBoxLayout(hero)
+        hero_lay.setContentsMargins(24, 20, 24, 20)
+        title_lay = QVBoxLayout()
+        title_lay.setSpacing(4)
+        title = QLabel("Settings")
+        title.setFont(QFont("Segoe UI", 28, QFont.Weight.DemiBold))
+        title.setStyleSheet(f"color: {C.WHITE};")
+        subtitle = QLabel("Set up Friday once. Keep your daily controls simple.")
+        subtitle.setFont(QFont("Segoe UI", 11))
         subtitle.setStyleSheet(f"color: {C.TEXT_DIM};")
-        subtitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        lay.addWidget(subtitle)
+        title_lay.addWidget(title)
+        title_lay.addWidget(subtitle)
+        hero_lay.addLayout(title_lay, 1)
 
-        cards_lay = QHBoxLayout()
-        cards_lay.setSpacing(24)
-        cards_lay.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        for text, color in (("AI ready", C.GREEN), ("Private setup", C.ACC)):
+            badge = QLabel(f"  ● {text}  ")
+            badge.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
+            badge.setStyleSheet(f"color: {color}; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); border-radius: 13px; padding: 6px 8px;")
+            hero_lay.addWidget(badge, 0, Qt.AlignmentFlag.AlignVCenter)
+        root.addWidget(hero)
 
-        cards_data = [
-            ("Brahma Echo Home", "Configure smart home integrations", "🏠", 1),
-            ("Devices", "Manage and control connected hardware", "🔌", 2),
-            ("System & Connect", "Configure providers and api preferences", "⚙️", 3)
+        hint = QLabel("Choose an area. Changes save directly to your Friday profile.")
+        hint.setStyleSheet(f"color: {C.TEXT_DIM}; padding-left: 4px;")
+        root.addWidget(hint)
+
+        grid_host = QWidget()
+        grid = QGridLayout(grid_host)
+        grid.setContentsMargins(0, 0, 0, 0)
+        grid.setHorizontalSpacing(14)
+        grid.setVerticalSpacing(14)
+        cards = [
+            ("AI & Vision", "Gemini, fallback providers, screen reasoning, and model preferences.", "✦", "Configure", 3),
+            ("Voice & Language", "Voice, wake behavior, English and Romanized Hinglish preferences.", "◌", "Configure", 3),
+            ("Phone & Devices", "Pair your phone, manage access, and control connected hardware.", "⌁", "Manage", 2),
+            ("Integrations", "Instagram, Google Workspace, Discord, and connected services.", "↗", "Configure", 3),
+            ("Automation", "Startup behavior, proactive assistance, alerts, and background work.", "⌘", "Configure", 3),
+            ("Appearance", "Theme, nano-glass visual style, launcher, and motion preferences.", "◐", "Customize", 3),
         ]
+        for index, (heading, description, icon, action, target) in enumerate(cards):
+            grid.addWidget(self._section_card(heading, description, icon, action, target), index // 2, index % 2)
+        root.addWidget(grid_host)
+        root.addStretch(1)
 
-        for title_text, desc_text, icon_emoji, target_idx in cards_data:
-            card = QFrame()
-            card.setFixedSize(280, 200)
-            card.setCursor(Qt.CursorShape.PointingHandCursor)
-            card.setStyleSheet(
-                f"QFrame {{ "
-                f"  background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 rgba(16, 18, 26, 0.75), stop:1 rgba(8, 10, 15, 0.85)); "
-                f"  border: 1px solid rgba(255, 179, 0, 0.18); "
-                f"  border-radius: 18px; "
-                f"}} "
-                f"QFrame:hover {{ "
-                f"  border: 1.5px solid {C.PRI}; "
-                f"  background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 rgba(35, 28, 15, 0.8), stop:1 rgba(16, 12, 8, 0.9)); "
-                f"}}"
-            )
-            card_lay = QVBoxLayout(card)
-            card_lay.setContentsMargins(20, 20, 20, 20)
-            card_lay.setSpacing(12)
-            card_lay.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-            icon_lbl = QLabel(icon_emoji)
-            icon_lbl.setFont(QFont("Segoe UI", 36))
-            icon_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            icon_lbl.setStyleSheet("background: transparent; border: none;")
-            card_lay.addWidget(icon_lbl)
-
-            t = QLabel(title_text)
-            t.setFont(QFont("Segoe UI", 15, QFont.Weight.Bold))
-            t.setStyleSheet(f"color: {C.WHITE}; background: transparent; border: none;")
-            t.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            card_lay.addWidget(t)
-
-            d = QLabel(desc_text)
-            d.setFont(QFont("Segoe UI", 9))
-            d.setStyleSheet(f"color: {C.TEXT_DIM}; background: transparent; border: none;")
-            d.setWordWrap(True)
-            d.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            card_lay.addWidget(d)
-
-            card.mousePressEvent = lambda e, idx=target_idx: self._nav_cb(idx)
-            cards_lay.addWidget(card)
-
-        lay.addStretch(1)
-        lay.addLayout(cards_lay)
-        lay.addStretch(2)
+    def _section_card(self, heading: str, description: str, icon: str, action: str, target: int) -> QFrame:
+        card = QFrame()
+        card.setObjectName("SettingsSection")
+        card.setMinimumHeight(142)
+        card.setCursor(Qt.CursorShape.PointingHandCursor)
+        lay = QHBoxLayout(card)
+        lay.setContentsMargins(18, 16, 18, 16)
+        lay.setSpacing(14)
+        icon_label = QLabel(icon)
+        icon_label.setFixedSize(46, 46)
+        icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        icon_label.setFont(QFont("Segoe UI Symbol", 20, QFont.Weight.DemiBold))
+        icon_label.setStyleSheet(f"color: {C.ACC}; background: rgba(10, 132, 255, 0.14); border: 1px solid rgba(10, 132, 255, 0.26); border-radius: 14px;")
+        lay.addWidget(icon_label, 0, Qt.AlignmentFlag.AlignTop)
+        copy = QVBoxLayout()
+        copy.setSpacing(5)
+        title = QLabel(heading)
+        title.setFont(QFont("Segoe UI", 13, QFont.Weight.DemiBold))
+        title.setStyleSheet(f"color: {C.WHITE};")
+        body = QLabel(description)
+        body.setWordWrap(True)
+        body.setFont(QFont("Segoe UI", 10))
+        body.setStyleSheet(f"color: {C.TEXT_DIM};")
+        action_label = QLabel(f"{action}  ›")
+        action_label.setFont(QFont("Segoe UI", 10, QFont.Weight.DemiBold))
+        action_label.setStyleSheet(f"color: {C.PRI};")
+        copy.addWidget(title)
+        copy.addWidget(body)
+        copy.addStretch(1)
+        copy.addWidget(action_label)
+        lay.addLayout(copy, 1)
+        card.mousePressEvent = lambda event: self._nav_cb(target)
+        return card
 
 class SystemConnectivityPage(QWidget):
     def __init__(self, controller=None, parent=None):
         super().__init__(parent)
+        from ui_settings import SettingsShell
+
         self._controller = controller
+        self._settings_cards = []
         self.setObjectName("SystemConnectivityPage")
-        self.setStyleSheet(f"""
-            QWidget#SystemConnectivityPage {{
-                background: transparent;
-            }}
-            QFrame#SettingsCard {{
-                background: rgba(10, 12, 18, 160);
-                border: 1.5px solid rgba(255, 179, 0, 0.15);
-                border-radius: 18px;
-            }}
-            QFrame#SettingsCard:hover {{
-                border: 1.5px solid rgba(255, 179, 0, 0.35);
-                background: rgba(20, 16, 12, 200);
-            }}
-            QLabel {{
-                background: transparent;
-            }}
-            QPushButton {{
-                background: rgba(255, 255, 255, 0.03);
-                color: {C.WHITE};
-                border: 1px solid rgba(255, 255, 255, 0.08);
-                border-radius: 12px;
-                padding: 10px 12px;
-            }}
-            QPushButton:hover {{
-                background: rgba(255, 179, 0, 0.12);
-                border: 1px solid rgba(255, 179, 0, 0.45);
-            }}
-            QLineEdit, QComboBox {{
-                background: rgba(13, 15, 19, 240);
-                color: {C.WHITE};
-                border: 1px solid rgba(255, 255, 255, 0.08);
-                border-radius: 12px;
-                min-height: 34px;
-                padding: 0 10px;
-            }}
-            QLineEdit:focus, QComboBox:focus {{
-                border: 1px solid {C.PRI};
-                background: rgba(255, 179, 0, 0.02);
-            }}
-        """)
         root = QVBoxLayout(self)
-        root.setContentsMargins(18, 16, 18, 16)
-        root.setSpacing(0)
-
-        self._scroll = QScrollArea()
-        self._scroll.setFrameShape(QFrame.Shape.NoFrame)
-        self._scroll.setWidgetResizable(True)
-        self._scroll.setStyleSheet("QScrollArea { background: transparent; border: none; }")
-        root.addWidget(self._scroll)
-
-        self._content = QWidget()
-        self._scroll.setWidget(self._content)
-        lay = QVBoxLayout(self._content)
-        lay.setContentsMargins(0, 0, 0, 0)
-        lay.setSpacing(16)
-
-        header = QFrame()
-        header.setStyleSheet("background: transparent; border: none;")
-        h_lay = QVBoxLayout(header)
-        h_lay.setContentsMargins(0, 0, 0, 0)
-        h_lay.setSpacing(6)
-        title = QLabel("SYSTEM & CONNECTIVITY")
-        title.setFont(QFont("Segoe UI", 22, QFont.Weight.Black))
-        title.setStyleSheet(f"color: {C.WHITE}; letter-spacing: 1px;")
-        sub = QLabel("Manage your AI providers, connections and application preferences.")
-        sub.setFont(QFont("Segoe UI", 10))
-        sub.setStyleSheet(f"color: {C.TEXT_DIM};")
-        h_lay.addWidget(title)
-        h_lay.addWidget(sub)
-        lay.addWidget(header)
-
-        top = QHBoxLayout()
-        top.setSpacing(14)
-        top.addWidget(self._build_left_column(), 7)
-        top.addWidget(self._build_summary_card(), 3)
-        lay.addLayout(top)
-        lay.addStretch(1)
-
+        root.setContentsMargins(16, 12, 16, 12)
+        self._shell = SettingsShell(self)
+        root.addWidget(self._shell)
+        # Build each existing service control exactly once, then place it in
+        # its own category. Saving handlers and device state stay intact.
+        control_host = self._build_left_column()
+        control_host.hide()
+        mapping = {
+            "AI Providers": "AI & Vision",
+            "Audio Routing & Hardware Controls": "Voice",
+            "Mobile Connect": "Devices",
+            "Instagram Connect": "Integrations",
+            "Google Workspace (Gmail / Calendar / Drive)": "Integrations",
+            "Discord Bot": "Integrations",
+            "Attention Prompts": "Automation",
+            "Startup": "Automation",
+            "Auto-Heal & Continuous Self-Improvement": "Automation",
+            "Startup Animation": "Appearance",
+        }
+        for title, card in self._settings_cards:
+            category = mapping.get(title, "Appearance" if "Stark" in title or "Design" in title else "Profile & System")
+            control_host.layout().removeWidget(card)
+            self._shell.add_card(category, title, card)
+        control_host.deleteLater()
+        self._shell.add_card("Profile & System", "System Status", self._build_status_box())
+        self._shell.add_card("Profile & System", "Quick Actions", self._build_quick_actions_box())
+        motion_card = self._card("Motion", "Reduce settings transitions for a quieter interface.")
+        motion = self._mk_toggle(
+            "Reduce motion",
+            bool(self._load_app_settings().get("reduce_motion_enabled", False)),
+            self._set_reduced_motion,
+        )
+        motion_card.layout().addWidget(motion)
+        self._shell.add_card("Appearance", "Motion", motion_card)
+        self._shell.set_reduced_motion(bool(self._load_app_settings().get("reduce_motion_enabled", False)))
+        self._shell.select_category("AI & Vision")
         self.refresh()
 
     def set_controller(self, controller):
@@ -10393,6 +10924,10 @@ class SystemConnectivityPage(QWidget):
 
     def _ctrl(self):
         return self._controller
+
+    def _set_reduced_motion(self, checked):
+        self._set_setting("reduce_motion_enabled", bool(checked))
+        self._shell.set_reduced_motion(checked)
 
     def _card(self, title: str, subtitle: str = "") -> QFrame:
         frame = QFrame()
@@ -10409,11 +10944,12 @@ class SystemConnectivityPage(QWidget):
             sub.setWordWrap(True)
             sub.setStyleSheet(f"color: {C.TEXT_DIM};")
             lay.addWidget(sub)
+        if hasattr(self, "_settings_cards"):
+            self._settings_cards.append((title, frame))
         return frame
 
     def _mk_toggle(self, text: str, checked: bool, callback):
-        btn = QPushButton(text)
-        btn.setCheckable(True)
+        btn = QCheckBox(text)
         btn.setChecked(checked)
         btn.setCursor(Qt.CursorShape.PointingHandCursor)
         btn.clicked.connect(lambda: callback(btn.isChecked()))
@@ -10442,9 +10978,7 @@ class SystemConnectivityPage(QWidget):
         key = (key or "").strip()
         if not key:
             return "Not set"
-        if len(key) <= 8:
-            return "ΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇó"
-        return f"{key[:4]}ΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇó{key[-4:]}"
+        return "Key saved securely"
 
     def _provider_row(self, name: str, key: str, model: str, setting_key: str):
         row = QFrame()
@@ -10504,7 +11038,7 @@ class SystemConnectivityPage(QWidget):
                 }
             """)
         edit.clicked.connect(lambda: self._open_api_keys())
-        test = QPushButton("Test Connection")
+        test = QPushButton("Check saved key")
         test.clicked.connect(lambda: self._test_provider(setting_key))
         btn_lay.addWidget(edit)
         btn_lay.addWidget(test)
@@ -10522,7 +11056,7 @@ class SystemConnectivityPage(QWidget):
 
 
         # Instagram Connect
-        ig_card = self._card("Instagram Connect", "Connect your personal Instagram account to allow Brahma Echo to manage your DMs.")
+        ig_card = self._card("Instagram Connect", "Connect your personal Instagram account to allow Friday to manage your DMs.")
         ig_lay = ig_card.layout()
 
         self._ig_status_lbl = QLabel("Status: Checking...")
@@ -10659,14 +11193,14 @@ class SystemConnectivityPage(QWidget):
         ast_row = QHBoxLayout()
         ast_row.addWidget(QLabel("Assistant Name"))
         self._set_ast_name = QLineEdit(identity.get_assistant_name())
-        self._set_ast_name.textChanged.connect(lambda t: identity.set_assistant_name(t.strip() or "Brahma"))
+        self._set_ast_name.editingFinished.connect(lambda: identity.set_assistant_name(self._set_ast_name.text().strip() or "Friday"))
         ast_row.addWidget(self._set_ast_name)
         ilay.addLayout(ast_row)
         
         app_row = QHBoxLayout()
         app_row.addWidget(QLabel("Application Name"))
         self._set_app_name = QLineEdit(identity.get_application_name())
-        self._set_app_name.textChanged.connect(lambda t: identity.set_application_name(t.strip() or "Brahma Echo"))
+        self._set_app_name.editingFinished.connect(lambda: identity.set_application_name(self._set_app_name.text().strip() or "Friday"))
         app_row.addWidget(self._set_app_name)
         ilay.addLayout(app_row)
 
@@ -10674,14 +11208,14 @@ class SystemConnectivityPage(QWidget):
         own_row = QHBoxLayout()
         own_row.addWidget(QLabel("Your Name"))
         self._set_own_name = QLineEdit(identity.get_owner_name())
-        self._set_own_name.textChanged.connect(lambda t: identity.set_owner_name(t.strip()))
+        self._set_own_name.editingFinished.connect(lambda: identity.set_owner_name(self._set_own_name.text().strip()))
         own_row.addWidget(self._set_own_name)
         ilay.addLayout(own_row)
 
         role_row = QHBoxLayout()
         role_row.addWidget(QLabel("Your Role"))
         self._set_own_role = QLineEdit(identity.get_owner_role())
-        self._set_own_role.textChanged.connect(lambda t: identity.set_owner_role(t.strip()))
+        self._set_own_role.editingFinished.connect(lambda: identity.set_owner_role(self._set_own_role.text().strip()))
         role_row.addWidget(self._set_own_role)
         ilay.addLayout(role_row)
 
@@ -10704,7 +11238,7 @@ class SystemConnectivityPage(QWidget):
         self._gemini_row, self._gemini_status, self._gemini_key = self._provider_row(
             "Google Gemini",
             self._api_defaults.get("gemini_api_key", ""),
-            "gemini-2.5-flash",
+            "gemini-3.8-flash",
             "gemini",
         )
         self._or_row, self._or_status, self._or_key = self._provider_row(
@@ -10741,14 +11275,14 @@ class SystemConnectivityPage(QWidget):
         url_row = QHBoxLayout()
         url_row.addWidget(QLabel("Local Server URL"))
         self._local_url_input = QLineEdit(self._load_app_settings().get("local_ai_url", "http://localhost:11434/v1"))
-        self._local_url_input.textChanged.connect(lambda t: self._set_setting("local_ai_url", t))
+        self._local_url_input.editingFinished.connect(lambda: self._set_setting("local_ai_url", self._local_url_input.text().strip()))
         url_row.addWidget(self._local_url_input, 1)
         local_lay.addLayout(url_row)
         
         model_row = QHBoxLayout()
         model_row.addWidget(QLabel("Local Model Name"))
         self._local_model_input = QLineEdit(self._load_app_settings().get("local_ai_model", "llama3.2"))
-        self._local_model_input.textChanged.connect(lambda t: self._set_setting("local_ai_model", t))
+        self._local_model_input.editingFinished.connect(lambda: self._set_setting("local_ai_model", self._local_model_input.text().strip()))
         model_row.addWidget(self._local_model_input, 1)
         local_lay.addLayout(model_row)
         
@@ -10762,7 +11296,7 @@ class SystemConnectivityPage(QWidget):
         lay.addWidget(card)
 
         # Mobile connect
-        mobile = self._card("Mobile Connect", "Connect your phone and control Brahma Echo remotely.")
+        mobile = self._card("Mobile Connect", "Connect your phone and control Friday remotely.")
         ml = mobile.layout()
         self._mobile_status = QLabel("Connection Status: Ready")
         self._mobile_phone = QLabel("Phone Name: Not connected")
@@ -10773,8 +11307,8 @@ class SystemConnectivityPage(QWidget):
         row = QHBoxLayout()
         self._mobile_connect_btn = QPushButton("Connect Device")
         self._mobile_connect_btn.clicked.connect(self._connect_mobile)
-        self._mobile_disconnect_btn = QPushButton("Disconnect")
-        self._mobile_disconnect_btn.clicked.connect(self._disconnect_mobile)
+        self._mobile_disconnect_btn = QPushButton("Manage devices")
+        self._mobile_disconnect_btn.clicked.connect(self._open_devices_page)
         self._mobile_qr_btn = QPushButton("Generate QR Code")
         self._mobile_qr_btn.clicked.connect(self._show_qr_code)
         row.addWidget(self._mobile_connect_btn)
@@ -10801,9 +11335,9 @@ class SystemConnectivityPage(QWidget):
         lay.addWidget(attention)
 
         # Startup
-        startup = self._card("Startup", "Use Brahma Echo with Windows startup preferences.")
+        startup = self._card("Startup", "Use Friday with Windows startup preferences.")
         sl = startup.layout()
-        self._startup_launch_btn = self._mk_toggle("Launch Brahma Echo when Windows starts", bool(self._load_app_settings().get("show_workspace_on_startup", False)), self._toggle_startup_from_page)
+        self._startup_launch_btn = self._mk_toggle("Launch Friday when Windows starts", bool(self._load_app_settings().get("show_workspace_on_startup", False)), self._toggle_startup_from_page)
         self._startup_minimized_btn = self._mk_toggle("Launch Minimized", bool(self._load_app_settings().get("launch_minimized", False)), self._toggle_launch_minimized)
         self._startup_updates_btn = self._mk_toggle("Check for updates on startup", bool(self._load_app_settings().get("check_updates_on_startup", True)), self._toggle_update_check)
         sl.addWidget(self._startup_launch_btn)
@@ -10812,7 +11346,7 @@ class SystemConnectivityPage(QWidget):
         lay.addWidget(startup)
 
         # Shortcuts & Pinning
-        shortcuts = self._card("Shortcuts & Pinning", "Create shortcuts and pin Brahma Echo to your Windows system.")
+        shortcuts = self._card("Shortcuts & Pinning", "Create shortcuts and pin Friday to your Windows system.")
         shl = shortcuts.layout()
         
         btn_row = QHBoxLayout()
@@ -10828,44 +11362,120 @@ class SystemConnectivityPage(QWidget):
         shl.addLayout(btn_row)
         lay.addWidget(shortcuts)
 
-        # App Theme
-        theme_card = self._card("App Theme", "Select the primary color theme for Brahma Echo.")
-        tl = theme_card.layout()
-        theme_row = QHBoxLayout()
-        theme_row.addWidget(QLabel("Primary Color:"))
-        
-        self._pick_theme_btn = QPushButton("Pick Color Palette")
+        # Stark Visual Matrix & Arc Reactor Core Designs
+        stark_card = self._card(
+            "Stark Visual Matrix & Arc Reactor Designs",
+            "Transform Friday's floating HUD orb, holographic telemetry, and application theme with iconic Tony Stark armor designs."
+        )
+        stl = stark_card.layout()
+
+        # Selector Row
+        s_row = QHBoxLayout()
+        s_row.setSpacing(12)
+        s_lbl = QLabel("Armor / Core Matrix:")
+        s_lbl.setStyleSheet(f"color: {C.WHITE}; font-weight: bold;")
+        s_row.addWidget(s_lbl)
+
+        self._stark_design_combo = QComboBox()
+        self._stark_design_combo.addItem("⚡ Mark L Nanotech RT (Electric Cyan & Quantum Rings)", "nanotech")
+        self._stark_design_combo.addItem("🛡️ Mark III Classic Armor (Hotrod Crimson & Stark Gold)", "mark_3")
+        self._stark_design_combo.addItem("💥 Veronica Hulkbuster MK-XLIV (Industrial Magma Amber & Hex-Armor)", "hulkbuster")
+        self._stark_design_combo.addItem("🕶️ E.D.I.T.H. Tactical HUD (AR Cobalt Blue & Radar Sweep)", "edith")
+        self._stark_design_combo.addItem("✈️ Mark II Supersonic Stealth (Polished Titanium Chrome)", "stealth")
+        self._stark_design_combo.addItem("🔋 Mark I Cave Palladium Core (10 Copper Coils & Incandescent Glow)", "palladium")
+
+        try:
+            from memory import config_manager
+            cur_stark = config_manager.get_stark_design()
+        except Exception:
+            cur_stark = "nanotech"
+
+        for idx in range(self._stark_design_combo.count()):
+            if self._stark_design_combo.itemData(idx) == cur_stark:
+                self._stark_design_combo.setCurrentIndex(idx)
+                break
+
+        self._stark_design_combo.currentIndexChanged.connect(self._on_stark_design_selected)
+        s_row.addWidget(self._stark_design_combo, 1)
+        stl.addLayout(s_row)
+
+        # Lore / Spec Banner Card
+        self._stark_desc_box = QFrame()
+        self._stark_desc_box.setStyleSheet("""
+            QFrame {
+                background: rgba(15, 18, 25, 230);
+                border: 1px solid rgba(255, 255, 255, 0.10);
+                border-radius: 12px;
+                padding: 10px;
+            }
+        """)
+        desc_lay = QVBoxLayout(self._stark_desc_box)
+        desc_lay.setContentsMargins(10, 8, 10, 8)
+        desc_lay.setSpacing(4)
+        self._stark_desc_title = QLabel()
+        self._stark_desc_title.setStyleSheet(f"color: {C.WHITE}; font-weight: bold; font-size: 13px;")
+        self._stark_desc_text = QLabel()
+        self._stark_desc_text.setWordWrap(True)
+        self._stark_desc_text.setStyleSheet(f"color: {C.TEXT_MED}; font-size: 11px;")
+        desc_lay.addWidget(self._stark_desc_title)
+        desc_lay.addWidget(self._stark_desc_text)
+        stl.addWidget(self._stark_desc_box)
+
+        # Options Row: Theme sync toggle & Test launcher button
+        opt_row = QHBoxLayout()
+        opt_row.setSpacing(12)
+        try:
+            from memory import config_manager
+            sync_enabled = config_manager.get_stark_theme_sync_enabled()
+        except Exception:
+            sync_enabled = True
+
+        self._stark_sync_toggle = self._mk_toggle(
+            "Sync Entire App Palette with Design",
+            sync_enabled,
+            self._on_stark_sync_toggled
+        )
+        opt_row.addWidget(self._stark_sync_toggle, 1)
+
+        self._test_launcher_btn = QPushButton("🚀 Preview Floating Arc Reactor")
+        self._test_launcher_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._test_launcher_btn.clicked.connect(self._handle_preview_floating_launcher)
+        opt_row.addWidget(self._test_launcher_btn)
+        stl.addLayout(opt_row)
+
+        # Manual Color Palette Override row
+        custom_row = QHBoxLayout()
+        custom_row.addWidget(QLabel("Custom Color Override:"))
+        self._pick_theme_btn = QPushButton("Custom Hex Palette")
         self._pick_theme_btn.clicked.connect(self._pick_theme_color)
-        
+
         current_theme = "Gold"
         try:
             if APP_SETTINGS_FILE.exists():
                 with open(APP_SETTINGS_FILE, "r", encoding="utf-8") as f:
                     _d = json.load(f)
                     current_theme = _d.get("app_theme", "Gold")
-        except:
+        except Exception:
             pass
-            
+
         if current_theme.startswith("#"):
             self._pick_theme_btn.setStyleSheet(f"background: {current_theme}; color: #ffffff;")
-        
-        theme_row.addWidget(self._pick_theme_btn, 1)
-        tl.addLayout(theme_row)
-        lay.addWidget(theme_card)
+        custom_row.addWidget(self._pick_theme_btn, 1)
+        stl.addLayout(custom_row)
+
+        self._stark_status_lbl = QLabel("Stark Visual Matrix loaded.")
+        self._stark_status_lbl.setStyleSheet(f"color: {C.TEXT_DIM}; font-size: 11px;")
+        stl.addWidget(self._stark_status_lbl)
+
+        lay.addWidget(stark_card)
+        self._update_stark_desc(cur_stark)
 
         # Startup animation
         anim = self._card("Startup Animation", "Control how the boot sequence behaves.")
         al = anim.layout()
         self._startup_anim_enable_btn = self._mk_toggle("Enable Startup Animation", bool(self._startup_animation_enabled()), self._toggle_startup_animation_from_page)
         al.addWidget(self._startup_anim_enable_btn)
-        speed_row = QHBoxLayout()
-        speed_row.addWidget(QLabel("Animation Speed"))
-        self._anim_speed = QComboBox()
-        self._anim_speed.addItems(["Fast", "Normal", "Slow"])
-        self._anim_speed.setCurrentText(self._load_app_settings().get("startup_anim_speed", "Normal"))
-        speed_row.addWidget(self._anim_speed, 1)
-        al.addLayout(speed_row)
-        self._anim_preview_btn = QPushButton("Preview Animation")
+        self._anim_preview_btn = QPushButton("Preview settings motion")
         self._anim_preview_btn.clicked.connect(self._preview_animation)
         al.addWidget(self._anim_preview_btn)
         self._preview_progress = QProgressBar()
@@ -10877,7 +11487,7 @@ class SystemConnectivityPage(QWidget):
         al.addWidget(self._preview_progress)
         lay.addWidget(anim)
         # Discord bot
-        discord = self._card("Discord Bot", "Mirror Brahma Echo between the app and your server.")
+        discord = self._card("Discord Bot", "Mirror Friday between the app and your server.")
         dl = discord.layout()
         self._discord_defaults = self._load_discord_settings()
         self._discord_status = QLabel("Bot Status: Offline")
@@ -10912,7 +11522,7 @@ class SystemConnectivityPage(QWidget):
         dl.addWidget(self._discord_msg)
         lay.addWidget(discord)
 
-        about = self._card("About Brahma Echo", "Brahma Echo information only.")
+        about = self._card("About Friday", "Friday information only.")
         ab = about.layout()
         about_grid = QGridLayout()
         about_grid.setHorizontalSpacing(22)
@@ -10968,7 +11578,7 @@ class SystemConnectivityPage(QWidget):
 
         rule_input_row = QHBoxLayout()
         self._ah_rule_input = QLineEdit()
-        self._ah_rule_input.setPlaceholderText("Teach Brahma a rule (e.g. Always summarize in bullet points)")
+        self._ah_rule_input.setPlaceholderText("Teach Friday a rule (e.g. Always summarize in bullet points)")
         rule_input_row.addWidget(self._ah_rule_input)
         self._ah_learn_btn = QPushButton("Teach Rule")
         self._ah_learn_btn.clicked.connect(self._handle_ah_learn_rule)
@@ -10986,9 +11596,41 @@ class SystemConnectivityPage(QWidget):
         except Exception:
             pass
 
-        # Brahma Audio Routing & Hardware Controls
+        # Friday Audio Routing & Hardware Controls
         audio_card = self._card("Audio Routing & Hardware Controls", "Select hardware audio interfaces, toggle Push-to-Talk, or inspect long-term memory.")
         alay = audio_card.layout()
+        language = QLabel("Voice language: English and Romanized Hinglish")
+        language.setWordWrap(True)
+        alay.addWidget(language)
+        from memory import config_manager
+        self._wake_toggle = self._mk_toggle(
+            "Listen for Friday hands-free",
+            config_manager.get_wake_word_enabled(),
+            config_manager.save_wake_word_enabled,
+        )
+        alay.addWidget(self._wake_toggle)
+
+        # Voice Persona selection row (OG FRIDAY vs JARVIS)
+        voice_row = QHBoxLayout()
+        voice_lbl = QLabel("AI Voice Persona")
+        voice_lbl.setStyleSheet(f"color: {C.PRI}; min-width: 130px; font-weight: bold;")
+        voice_row.addWidget(voice_lbl)
+
+        self._voice_combo = QComboBox()
+        self._voice_combo.addItem("🎙️ OG FRIDAY (Irish Female — Kerry Condon)", "friday")
+        self._voice_combo.addItem("🎙️ JARVIS (British Male — Paul Bettany)", "jarvis")
+        try:
+            from memory import config_manager
+            current_persona = config_manager.get_voice_persona()
+            if current_persona == "jarvis":
+                self._voice_combo.setCurrentIndex(1)
+            else:
+                self._voice_combo.setCurrentIndex(0)
+        except Exception:
+            pass
+        self._voice_combo.currentIndexChanged.connect(self._on_voice_persona_changed)
+        voice_row.addWidget(self._voice_combo, 1)
+        alay.addLayout(voice_row)
 
         # Mic selection row
         mic_row = QHBoxLayout()
@@ -11038,7 +11680,7 @@ class SystemConnectivityPage(QWidget):
         alay.addLayout(spk_row)
 
         # Push-to-Talk and Memory Inspector Action buttons
-        tools_row = QHBoxLayout()
+        tools_row = QVBoxLayout()
         try:
             from memory import config_manager
             ptt_enabled = config_manager.get_push_to_talk_enabled()
@@ -11063,6 +11705,38 @@ class SystemConnectivityPage(QWidget):
         tools_row.addWidget(undo_btn)
         alay.addLayout(tools_row)
 
+        # Smart Conversational Filter toggle
+        gate_row = QHBoxLayout()
+        try:
+            from memory import config_manager
+            conv_enabled = config_manager.get_conversational_filter_enabled()
+        except Exception:
+            conv_enabled = True
+
+        self._conv_filter_toggle = self._mk_toggle(
+            "Filter room noise and side conversations",
+            conv_enabled,
+            self._on_conv_filter_toggled
+        )
+        gate_row.addWidget(self._conv_filter_toggle)
+        alay.addLayout(gate_row)
+
+        # Proactive Auto-Clipboard Vocalization toggle (opt-in)
+        clip_row = QHBoxLayout()
+        try:
+            from memory import config_manager
+            clip_enabled = config_manager.get_auto_clipboard_enabled()
+        except Exception:
+            clip_enabled = False
+
+        self._auto_clip_toggle = self._mk_toggle(
+            "Read copied text aloud",
+            clip_enabled,
+            self._on_auto_clip_toggled
+        )
+        clip_row.addWidget(self._auto_clip_toggle)
+        alay.addLayout(clip_row)
+
         self._audio_status_lbl = QLabel("Hardware audio deduplication, echo guard and undo stack active.")
         self._audio_status_lbl.setStyleSheet(f"color: {C.TEXT_MED}; font-size: 11px;")
         alay.addWidget(self._audio_status_lbl)
@@ -11072,6 +11746,38 @@ class SystemConnectivityPage(QWidget):
         lay.addStretch(1)
         return col
 
+
+    def _on_voice_persona_changed(self, index: int):
+        data = self._voice_combo.itemData(index) if hasattr(self, "_voice_combo") else ("jarvis" if index == 1 else "friday")
+        try:
+            from memory import config_manager
+            config_manager.set_voice_persona(str(data or "friday"))
+            persona_name = "JARVIS" if data == "jarvis" else "OG FRIDAY"
+            if hasattr(self, "_audio_status_lbl"):
+                self._audio_status_lbl.setText(f"✅ Voice persona set to: {persona_name}")
+
+            # Audio confirmation in selected voice
+            def _sample():
+                try:
+                    from actions.attention_monitor import _speak_edge_native
+                    if data == "jarvis":
+                        _speak_edge_native("JARVIS voice matrix activated. At your service, sir.")
+                    else:
+                        _speak_edge_native("OG Friday voice matrix activated. Online and ready, Boss.")
+                except Exception:
+                    pass
+            import threading
+            threading.Thread(target=_sample, daemon=True).start()
+        except Exception as e:
+            if hasattr(self, "_audio_status_lbl"):
+                self._audio_status_lbl.setText(f"Error setting voice: {e}")
+
+    def update_voice_selector(self, persona: str):
+        if hasattr(self, "_voice_combo"):
+            idx = 1 if persona == "jarvis" else 0
+            self._voice_combo.blockSignals(True)
+            self._voice_combo.setCurrentIndex(idx)
+            self._voice_combo.blockSignals(False)
 
     def _on_input_device_changed(self, name: str):
         try:
@@ -11095,9 +11801,28 @@ class SystemConnectivityPage(QWidget):
         try:
             from memory import config_manager
             config_manager.set_push_to_talk_enabled(checked)
+            ctrl = self._ctrl()
+            if ctrl is not None and hasattr(ctrl, "_win"):
+                ctrl._win.ptt_changed.emit(checked)
             self._audio_status_lbl.setText(f"✅ Push-to-Talk {'enabled (Hold Ctrl+Space)' if checked else 'disabled'}")
         except Exception as e:
             self._audio_status_lbl.setText(f"Error toggling PTT: {e}")
+
+    def _on_conv_filter_toggled(self, checked: bool):
+        try:
+            from memory import config_manager
+            config_manager.set_conversational_filter_enabled(checked)
+            self._audio_status_lbl.setText(f"✅ Smart Voice Gate {'active (ambient chatter filtered)' if checked else 'disabled (all audio sent)'}")
+        except Exception as e:
+            self._audio_status_lbl.setText(f"Error toggling filter: {e}")
+
+    def _on_auto_clip_toggled(self, checked: bool):
+        try:
+            from memory import config_manager
+            config_manager.set_auto_clipboard_enabled(checked)
+            self._audio_status_lbl.setText(f"✅ Auto-Clipboard {'enabled (will vocalize copied text)' if checked else 'disabled (quiet mode)'}")
+        except Exception as e:
+            self._audio_status_lbl.setText(f"Error toggling auto-clipboard: {e}")
 
     def _open_memory_inspector(self):
         try:
@@ -11308,7 +12033,7 @@ class SystemConnectivityPage(QWidget):
         self._update_ig_status()
         from PyQt6.QtWidgets import QMessageBox
         name_str = f" as @{detected_username}" if detected_username else ""
-        QMessageBox.information(self, "Instagram Connected", f"Instagram successfully connected via Browser{name_str}!\n\nBrahma is now active for voice DM notifications and instant direct replies.")
+        QMessageBox.information(self, "Instagram Connected", f"Instagram successfully connected via Browser{name_str}!\n\nFriday is now active for voice DM notifications and instant direct replies.")
 
     def _ig_browser_error(self, err_msg):
         self._ig_browser_btn.setEnabled(True)
@@ -11681,7 +12406,7 @@ class SystemConnectivityPage(QWidget):
             AutoHealEngine.record_last_error(tb)
             self._ah_output_lbl.setText(
                 f"❌ Simulated bug triggered in test_action.py: {type(e).__name__}: {e}\n"
-                f"Traceback captured in AutoHealEngine! Click 'Fix Captured Bug' or say 'Brahma, fix that bug'."
+                f"Traceback captured in AutoHealEngine! Click 'Fix Captured Bug' or say 'Friday, fix that bug'."
             )
 
     def _handle_ah_fix_captured_bug(self):
@@ -11695,6 +12420,110 @@ class SystemConnectivityPage(QWidget):
             self._refresh_auto_heal_status()
         except Exception as e:
             self._ah_output_lbl.setText(f"Error repairing bug: {e}")
+
+    def _update_stark_desc(self, design_key: str):
+        try:
+            from memory import config_manager
+            info = config_manager.STARK_DESIGNS.get(design_key, config_manager.STARK_DESIGNS.get("nanotech", {}))
+            name = info.get("name", design_key)
+            tagline = info.get("tagline", "")
+            desc = info.get("description", "")
+            color_hex = info.get("color_hex", "#00E5FF")
+            if hasattr(self, "_stark_desc_title"):
+                self._stark_desc_title.setText(f"{name} — {tagline}")
+                self._stark_desc_title.setStyleSheet(f"color: {color_hex}; font-weight: bold; font-size: 13px;")
+            if hasattr(self, "_stark_desc_text"):
+                self._stark_desc_text.setText(desc)
+            if hasattr(self, "_pick_theme_btn") and color_hex:
+                self._pick_theme_btn.setStyleSheet(f"background: {color_hex}; color: #ffffff; border: 1px solid rgba(255,255,255,0.2);")
+        except Exception:
+            pass
+
+    def _on_stark_design_selected(self, index: int):
+        data = self._stark_design_combo.itemData(index) if hasattr(self, "_stark_design_combo") else "nanotech"
+        design_key = str(data or "nanotech").lower()
+        try:
+            from memory import config_manager
+            config_manager.set_stark_design(design_key)
+            info = config_manager.STARK_DESIGNS.get(design_key, {})
+            name = info.get("name", design_key)
+            color_hex = info.get("color_hex", "#00E5FF")
+
+            self._update_stark_desc(design_key)
+
+            # Update floating launcher widget if active
+            ctrl = self._ctrl()
+            if ctrl and hasattr(ctrl, "_launcher") and ctrl._launcher:
+                ctrl._launcher.set_stark_design(design_key)
+
+            # If theme sync is enabled, sync entire app palette
+            if config_manager.get_stark_theme_sync_enabled():
+                C.load_theme(color_hex)
+                try:
+                    self._save_theme_to_settings(color_hex)
+                except Exception:
+                    pass
+
+            if hasattr(self, "_stark_status_lbl"):
+                self._stark_status_lbl.setText(f"✅ Active Stark Design: {name}")
+
+            # Audio confirmation in selected design
+            def _audio_confirm():
+                try:
+                    from actions.attention_monitor import _speak_edge_native
+                    _speak_edge_native(f"Visual matrix updated. {name} online.")
+                except Exception:
+                    pass
+            import threading
+            threading.Thread(target=_audio_confirm, daemon=True).start()
+        except Exception as e:
+            if hasattr(self, "_stark_status_lbl"):
+                self._stark_status_lbl.setText(f"Error applying design: {e}")
+
+    def _save_theme_to_settings(self, new_theme: str):
+        settings = {}
+        try:
+            if APP_SETTINGS_FILE.exists():
+                with open(APP_SETTINGS_FILE, "r", encoding="utf-8") as f:
+                    settings = json.load(f)
+            settings["app_theme"] = new_theme
+            with open(APP_SETTINGS_FILE, "w", encoding="utf-8") as f:
+                json.dump(settings, f, indent=4)
+        except Exception:
+            pass
+
+    def _on_stark_sync_toggled(self, checked: bool):
+        try:
+            from memory import config_manager
+            config_manager.set_stark_theme_sync_enabled(checked)
+            if checked:
+                cur = config_manager.get_stark_design()
+                info = config_manager.STARK_DESIGNS.get(cur, {})
+                color_hex = info.get("color_hex", "#00E5FF")
+                C.load_theme(color_hex)
+                self._save_theme_to_settings(color_hex)
+            if hasattr(self, "_stark_status_lbl"):
+                self._stark_status_lbl.setText(f"Theme synchronization {'enabled' if checked else 'disabled'}.")
+        except Exception as e:
+            if hasattr(self, "_stark_status_lbl"):
+                self._stark_status_lbl.setText(f"Error toggling sync: {e}")
+
+    def _handle_preview_floating_launcher(self):
+        ctrl = self._ctrl()
+        if ctrl and hasattr(ctrl, "_show_floating_icon"):
+            ctrl._show_floating_icon()
+            if hasattr(self, "_stark_status_lbl"):
+                self._stark_status_lbl.setText("🚀 Floating Arc Reactor displayed on screen.")
+
+    def update_stark_design_selector(self, design_key: str):
+        if hasattr(self, "_stark_design_combo"):
+            for idx in range(self._stark_design_combo.count()):
+                if self._stark_design_combo.itemData(idx) == design_key:
+                    self._stark_design_combo.blockSignals(True)
+                    self._stark_design_combo.setCurrentIndex(idx)
+                    self._stark_design_combo.blockSignals(False)
+                    self._update_stark_desc(design_key)
+                    break
 
     def _pick_theme_color(self):
         color = QColorDialog.getColor(QColor(C.PRI), self, "Select App Theme Color")
@@ -11736,9 +12565,9 @@ class SystemConnectivityPage(QWidget):
     def _build_status_box(self):
         box = self._card("System Status", "")
         lay = box.layout()
-        self._sys_online = QLabel("≡ƒƒó System Online")
+        self._sys_online = QLabel("Friday is running")
         self._sys_online.setStyleSheet("color: #35ff75; font-weight: 700;")
-        self._sys_note = QLabel("All systems are operational.")
+        self._sys_note = QLabel("Provider configuration is shown in AI & Vision.")
         self._sys_note.setStyleSheet(f"color: {C.TEXT_MED};")
         lay.addWidget(self._sys_online)
         lay.addWidget(self._sys_note)
@@ -11758,11 +12587,10 @@ class SystemConnectivityPage(QWidget):
         box = self._card("Quick Actions", "")
         lay = box.layout()
         actions = [
-            ("Restart Brahma Echo", QStyle.StandardPixmap.SP_BrowserReload, self._restart_app),
+            ("Restart Friday", QStyle.StandardPixmap.SP_BrowserReload, self._restart_app),
             ("Reload Configuration", QStyle.StandardPixmap.SP_BrowserReload, self._reload_config),
             ("Open Data Folder", QStyle.StandardPixmap.SP_DirOpenIcon, self._open_data_folder),
             ("View Logs", QStyle.StandardPixmap.SP_FileDialogDetailedView, self._view_logs),
-            ("Check for Updates", QStyle.StandardPixmap.SP_ArrowDown, self._check_updates),
         ]
         for text, icon_kind, slot in actions:
             btn = QPushButton(text)
@@ -11790,6 +12618,11 @@ class SystemConnectivityPage(QWidget):
     def _load_api_defaults(self):
         if self._ctrl() and hasattr(self._ctrl(), "_win"):
             return self._ctrl()._win._load_api_defaults()
+        try:
+            with open(API_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except (OSError, ValueError):
+            pass
         return {
             "gemini_api_key": "",
             "openrouter_api_key": "",
@@ -11799,12 +12632,24 @@ class SystemConnectivityPage(QWidget):
     def _load_app_settings(self):
         if self._ctrl() and hasattr(self._ctrl(), "_win"):
             return self._ctrl()._win._load_app_settings()
-        return _default_app_settings()
+        settings = _default_app_settings()
+        try:
+            with open(APP_SETTINGS_FILE, "r", encoding="utf-8") as f:
+                settings.update(json.load(f))
+        except (OSError, ValueError):
+            pass
+        return settings
 
     def _load_discord_settings(self):
         if self._ctrl() and hasattr(self._ctrl(), "_win"):
             return self._ctrl()._win._load_discord_settings()
-        return _default_discord_settings()
+        settings = _default_discord_settings()
+        try:
+            with open(DISCORD_SETTINGS_FILE, "r", encoding="utf-8") as f:
+                settings.update(json.load(f))
+        except (OSError, ValueError):
+            pass
+        return settings
 
     def _startup_animation_enabled(self):
         if self._ctrl() and hasattr(self._ctrl(), "_win"):
@@ -11866,6 +12711,11 @@ class SystemConnectivityPage(QWidget):
             self._mobile_connect_btn.setText("Connecting...")
             target._show_remote_connect()
             QTimer.singleShot(1100, lambda: self._mobile_connect_btn.setText("Connect Device"))
+
+    def _open_devices_page(self):
+        ctrl = self._ctrl()
+        if ctrl is not None and hasattr(ctrl, "_win"):
+            ctrl._win._set_page("devices")
 
     def _disconnect_mobile(self):
         if self._ctrl() and hasattr(self._ctrl(), "write_log"):
@@ -11962,9 +12812,8 @@ class SystemConnectivityPage(QWidget):
         self._save_discord_from_page()
         if self._ctrl() and hasattr(self._ctrl(), "_win"):
             self._ctrl()._win._start_discord_bot()
-            self._ctrl()._win._stop_discord_bot()
-            self._discord_status.setText("Bot Status: Test sent")
-            self._discord_msg.setText("Connected as Brahma Echo#9649" if self._discord_token.text().strip() else "Bot Offline")
+            self._discord_status.setText("Bot Status: Connection requested")
+            self._discord_msg.setText("Check bot logs for connection results.")
 
     def _restart_discord_from_page(self):
         if self._ctrl() and hasattr(self._ctrl(), "_win"):
@@ -12020,15 +12869,18 @@ class SystemConnectivityPage(QWidget):
             if widget is not None:
                 widget.blockSignals(True)
         try:
-            self._gemini_status.setText("Connected" if api.get("gemini_api_key") else "Not connected")
-            self._or_status.setText("Connected" if api.get("openrouter_api_key") else "Not connected")
+            self._gemini_status.setText("Key configured" if api.get("gemini_api_key") else "Key not configured")
+            self._or_status.setText("Key configured" if api.get("openrouter_api_key") else "Key not configured")
             self._gemini_key.setText(self._provider_key_preview(api.get("gemini_api_key", "")))
             self._or_key.setText(self._provider_key_preview(api.get("openrouter_api_key", "")))
-            self._default_provider.setCurrentText("Google Gemini" if app.get("default_ai_provider", "Gemini") == "Gemini" else "OpenRouter")
+            provider = app.get("default_ai_provider", "Gemini")
+            self._default_provider.setCurrentText("Google Gemini" if provider in ("Gemini", "Google Gemini") else provider)
+            self._local_ai_widget.setVisible(provider == "Local")
             self._auto_switch_btn.setChecked(bool(app.get("auto_provider_switch", True)))
             self._attention_message_btn.setChecked(bool(app.get("attention_message_prompts", True)))
             self._attention_call_btn.setChecked(bool(app.get("attention_call_prompts", True)))
-            self._startup_launch_btn.setChecked(bool(app.get("show_workspace_on_startup", False)))
+            ctrl = self._ctrl()
+            self._startup_launch_btn.setChecked(bool(ctrl._win._startup_enabled()) if ctrl and hasattr(ctrl, "_win") else False)
             self._startup_minimized_btn.setChecked(bool(app.get("launch_minimized", False)))
             self._startup_updates_btn.setChecked(bool(app.get("check_updates_on_startup", True)))
             self._startup_anim_enable_btn.setChecked(bool(self._startup_animation_enabled()))
@@ -12053,8 +12905,8 @@ class SystemConnectivityPage(QWidget):
         enabled = bool(discord.get("enabled", False))
         token = (discord.get("bot_token") or "").strip()
         if enabled and token:
-            self._discord_status.setText("Bot Status: Online")
-            self._discord_msg.setText("Connected as Brahma Echo#9649")
+            self._discord_status.setText("Bot Status: Configured")
+            self._discord_msg.setText("Check bot logs for live connection status.")
         elif token:
             self._discord_status.setText("Bot Status: Offline")
             self._discord_msg.setText("Bot Offline")
@@ -12062,7 +12914,7 @@ class SystemConnectivityPage(QWidget):
             self._discord_status.setText("Bot Status: Offline")
             self._discord_msg.setText("Token required")
         if self._ctrl() and hasattr(self._ctrl(), "_win"):
-            self._sys_provider.setText("Gemini" if app.get("default_ai_provider", "Gemini") == "Gemini" else "OpenRouter")
+            self._sys_provider.setText(app.get("default_ai_provider", "Gemini"))
 
     def _handle_create_desktop_shortcut(self):
         success, path_or_err = self._create_desktop_shortcut_logic()
@@ -12109,12 +12961,12 @@ class SystemConnectivityPage(QWidget):
                 desktop_dir = Path(os.path.expanduser("~")) / "Desktop"
                 
             desktop_dir.mkdir(parents=True, exist_ok=True)
-            shortcut_path = desktop_dir / "Brahma Echo - Premium.lnk"
+            shortcut_path = desktop_dir / "Friday - Premium.lnk"
             
             # Base variables
             base_dir = Path(os.path.abspath("."))
             script_path = base_dir / "main.py"
-            icon_path = base_dir / "assets" / "Brahma_Lite_Logo.ico"
+            icon_path = base_dir / "assets" / "friday.ico"
             
             python_exe = sys.executable
             if not python_exe:
@@ -12139,7 +12991,7 @@ class SystemConnectivityPage(QWidget):
                 f"$Shortcut.Arguments = '{_ps_escape(shortcut_args)}'",
                 f"$Shortcut.WorkingDirectory = '{_ps_escape(str(base_dir))}'",
                 "$Shortcut.WindowStyle = 7",
-                "$Shortcut.Description = 'Launch Brahma Echo - Premium'",
+                "$Shortcut.Description = 'Launch Friday - Premium'",
                 f"if ('{_ps_escape(icon_value)}') {{ $Shortcut.IconLocation = '{_ps_escape(icon_value)},0' }}",
                 "$Shortcut.Save()",
             ])
@@ -12199,9 +13051,9 @@ class SystemConnectivityPage(QWidget):
             )
             
             if res.returncode == 0:
-                return True, "Brahma Echo has been pinned to your Taskbar!"
+                return True, "Friday has been pinned to your Taskbar!"
             else:
-                return False, "Windows restricts programmatic taskbar pinning. Please right-click the 'Brahma Echo - Premium.lnk' shortcut on your Desktop and select 'Pin to taskbar', or drag it directly onto your taskbar."
+                return False, "Windows restricts programmatic taskbar pinning. Please right-click the 'Friday - Premium.lnk' shortcut on your Desktop and select 'Pin to taskbar', or drag it directly onto your taskbar."
         except Exception as e:
             return False, f"Error pinning to taskbar: {e}"
 
@@ -12285,7 +13137,7 @@ class SmartDevicesSection(QFrame):
                 background: rgba(255, 179, 0,0.16);
             }}
         """)
-        self._open_home_btn.clicked.connect(self._open_brahma_home)
+        self._open_home_btn.clicked.connect(self._open_friday_home)
         header.addWidget(self._open_home_btn)
         root.addLayout(header)
 
@@ -12303,7 +13155,7 @@ class SmartDevicesSection(QFrame):
         empty_desc.setAlignment(Qt.AlignmentFlag.AlignCenter)
         empty_desc.setFont(QFont("Segoe UI", 8))
         empty_desc.setStyleSheet(f"color: {C.TEXT_DIM};")
-        empty_btn = QPushButton("Open Brahma Echo Home")
+        empty_btn = QPushButton("Open Friday Home")
         empty_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         empty_btn.setFixedWidth(160)
         empty_btn.setStyleSheet(f"""
@@ -12318,7 +13170,7 @@ class SmartDevicesSection(QFrame):
                 background: rgba(255, 179, 0,0.18);
             }}
         """)
-        empty_btn.clicked.connect(self._open_brahma_home)
+        empty_btn.clicked.connect(self._open_friday_home)
         empty_lay.addStretch(1)
         empty_lay.addWidget(empty_title)
         empty_lay.addWidget(empty_desc)
@@ -12429,7 +13281,10 @@ class SmartDevicesSection(QFrame):
     def _controller_bridge(self):
         return self._controller
 
-    def _open_brahma_home(self):
+    def _open_friday_home(self):
+        pass
+    _open_brahma_home = _open_friday_home
+    def _open_friday_home(self):
         bridge = self._controller_bridge()
         if bridge and hasattr(bridge, "_set_page"):
             bridge._set_page("home")
@@ -12858,7 +13713,7 @@ class _ConnectDeviceCard(QFrame):
         super().mouseReleaseEvent(event)
 
 
-class BrahmaConnectDevicesPage(QFrame):
+class _LegacyFridayConnectDevicesPage(QFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._service = None
@@ -12869,9 +13724,9 @@ class BrahmaConnectDevicesPage(QFrame):
         self._selected_device_id: str | None = None
         self._onboarding_known_device_ids: set[str] = set()
 
-        self.setObjectName("BrahmaConnectDevicesPage")
+        self.setObjectName("FridayConnectDevicesPage")
         self.setStyleSheet(f"""
-            QFrame#BrahmaConnectDevicesPage {{
+            QFrame#FridayConnectDevicesPage {{
                 background: transparent;
                 border: none;
             }}
@@ -12891,7 +13746,7 @@ class BrahmaConnectDevicesPage(QFrame):
         self._title = QLabel("DEVICES")
         self._title.setFont(QFont("Segoe UI", 18, QFont.Weight.Black))
         self._title.setStyleSheet("color: #ffffff; letter-spacing: 2px;")
-        self._subtitle = QLabel("Everything connected to Brahma.")
+        self._subtitle = QLabel("Everything connected to Friday.")
         self._subtitle.setFont(QFont("Segoe UI", 9))
         self._subtitle.setStyleSheet("color: rgba(255,255,255,0.62);")
         title_box.addWidget(self._title)
@@ -13200,6 +14055,12 @@ class BrahmaConnectDevicesPage(QFrame):
         self._onb_status_lbl.setFont(QFont("Segoe UI", 8, QFont.Weight.Bold))
         self._onb_status_lbl.setStyleSheet("color: rgba(255,255,255,0.5); letter-spacing: 1px;")
         w1_lay.addWidget(self._onb_status_lbl)
+
+        self._onb_endpoint_lbl = QLabel("")
+        self._onb_endpoint_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._onb_endpoint_lbl.setFont(QFont("Consolas", 9, QFont.Weight.Bold))
+        self._onb_endpoint_lbl.setStyleSheet("color: #00e5ff; letter-spacing: 1px;")
+        w1_lay.addWidget(self._onb_endpoint_lbl)
         
         w1_ctrl = QHBoxLayout()
         w1_ctrl.addStretch(1)
@@ -13245,7 +14106,7 @@ class BrahmaConnectDevicesPage(QFrame):
         self._onboarding_pulse = 0
 
     def _service_obj(self):
-        return self._service or getattr(self.parentWidget(), "_brahma_connect", None)
+        return self._service or getattr(self.parentWidget(), "_friday_connect", None) or getattr(self.parentWidget(), "_brahma_connect", None)
 
     def set_service(self, service):
         self._service = service
@@ -13255,6 +14116,12 @@ class BrahmaConnectDevicesPage(QFrame):
         self._wizard_stack.setCurrentIndex(0)
 
     def _cinema_select_android(self):
+        service = self._service_obj()
+        if service:
+            from memory.config_manager import set_setting
+            set_setting("remote_access_enabled", True)
+            service.gateway.config.enabled = True
+            service.start_background()
         self._wizard_stack.setCurrentIndex(1)
         service = self._service_obj()
         self._onboarding_known_device_ids = set(str(d.get("device_id", "")) for d in service.list_devices()) if service else set()
@@ -13267,19 +14134,29 @@ class BrahmaConnectDevicesPage(QFrame):
             self._onboarding_offer = {}
             self._onb_code_lbl.setText("------")
             self._onb_status_lbl.setText("GATEWAY UNAVAILABLE")
+            if hasattr(self, "_onb_endpoint_lbl"):
+                self._onb_endpoint_lbl.setText("")
             return
         try:
-            import io
-            import qrcode
-
-            self._onboarding_offer = dict(service.create_pairing_offer(device_name="Brahma Connect", platform="gateway"))
+            self._onboarding_offer = dict(service.create_pairing_offer(device_name="Friday Connect", platform="gateway"))
             code = str(self._onboarding_offer.get("pairing_code") or "------")
-            self._onb_code_lbl.setText(code)
-            self._onb_status_lbl.setText("WAITING FOR CONNECTION")
+            host = self._onboarding_offer.get("host") or "127.0.0.1"
+            port = self._onboarding_offer.get("port") or 8765
+            tunnel = self._onboarding_offer.get("tunnel_url")
             
-            payload = self._onboarding_offer
-            text = json.dumps(payload, sort_keys=True, ensure_ascii=False)
-            if qrcode is not None:
+            self._onb_code_lbl.setText(code)
+            self._onb_status_lbl.setText("SCAN QR OR ENTER CODE ON PHONE")
+            if hasattr(self, "_onb_endpoint_lbl"):
+                if tunnel:
+                    self._onb_endpoint_lbl.setText(f"PC IP: {host}:{port}  |  Global: {tunnel}")
+                else:
+                    self._onb_endpoint_lbl.setText(f"Local: {host}:{port} | Waiting for internet tunnel...")
+
+            try:
+                import io
+                import qrcode
+                payload = self._onboarding_offer
+                text = json.dumps(payload, sort_keys=True, ensure_ascii=False)
                 qr = qrcode.QRCode(box_size=6, border=2, error_correction=qrcode.constants.ERROR_CORRECT_M)
                 qr.add_data(text)
                 qr.make(fit=True)
@@ -13295,9 +14172,9 @@ class BrahmaConnectDevicesPage(QFrame):
                         Qt.TransformationMode.SmoothTransformation,
                     )
                 )
-            else:
-                self._onb_qr_label.setText(text)
-                
+            except Exception as qr_err:
+                self._onb_qr_label.setText("QR Unavailable\nUse 6-digit Code")
+
             self._tick_onboarding()
         except Exception as exc:
             self._onboarding_offer = {}
@@ -13318,6 +14195,10 @@ class BrahmaConnectDevicesPage(QFrame):
             
         service = self._service_obj()
         if service and self._onboarding_offer:
+            tunnel = service.get_tunnel_url()
+            if tunnel and tunnel != self._onboarding_offer.get("tunnel_url"):
+                self._refresh_onboarding_offer()
+                return
             devices = service.list_devices()
             new_device = next(
                 (d for d in devices if str(d.get("device_id", "")) not in self._onboarding_known_device_ids),
@@ -13493,6 +14374,9 @@ class BrahmaConnectDevicesPage(QFrame):
         super().showEvent(event)
         self.refresh(force=True)
 
+from ui_devices import DevicesPage as FridayConnectDevicesPage
+
+
 class _RootShim:
     def __init__(self, app: QApplication):
         self._app = app
@@ -13502,12 +14386,20 @@ class _RootShim:
         pass
 
 
-class BrahmaUI:
-    def __init__(self, face_path: str, size=None, *, show_immediately: bool = True):
+class FridayUI:
+    def __init__(
+        self,
+        face_path: str,
+        size=None,
+        *,
+        show_immediately: bool = True,
+        show_launcher: bool = True,
+    ):
         self._app = QApplication.instance() or QApplication(sys.argv)
+        sound_mgr.initialize()
         self._app.setStyle("Fusion")
         self._app.setQuitOnLastWindowClosed(False)
-        self._app.setApplicationDisplayName("Brahma Echo")
+        self._app.setApplicationDisplayName("Friday")
         self._app.setWindowIcon(self._make_app_icon())
         try:
             current_store = workspace_store()
@@ -13515,6 +14407,7 @@ class BrahmaUI:
         except Exception:
             pass
         self._win = MainWindow(face_path)
+        self._win._voice_activate_sig.connect(self._activate_voice_on_ui_thread, Qt.ConnectionType.QueuedConnection)
         try:
             from core.updater import UpdateChecker
             self._updater = UpdateChecker()
@@ -13536,6 +14429,7 @@ class BrahmaUI:
         self._win.on_chat_event = self._on_chat_event
         self._app.aboutToQuit.connect(self._discord_service.stop)
         self._launcher = FloatingLauncher()
+        self._launcher.set_microphone_active(not self._win._muted)
         self._command_bar = CommandBar()
         self._workspace_sidebar = WorkspaceSidebar()
         self._control_panel: LauncherControlPanel | None = None
@@ -13564,7 +14458,7 @@ class BrahmaUI:
         except Exception:
             pass
         self._tray = QSystemTrayIcon(self._make_app_icon(), self._app)
-        self._tray.setToolTip("Brahma Echo")
+        self._tray.setToolTip("Friday")
         self._tray.activated.connect(self._on_tray_activated)
         self._tray.setContextMenu(self._build_tray_menu())
         self._tray.show()
@@ -13591,14 +14485,19 @@ class BrahmaUI:
         if show_immediately:
             self._launcher.hide()
             self.show_main()
-        else:
+        elif show_launcher:
             self._show_floating_icon()
         self.root = _RootShim(self._app)
 
     def _make_app_icon(self) -> QIcon:
         return _logo_icon()
 
-    def set_brahma_connect_service(self, service):
+    def set_friday_connect_service(self, service):
+        self._friday_connect = service
+        self._brahma_connect = service
+        self._win.set_friday_connect_service(service)
+    set_brahma_connect_service = set_friday_connect_service
+    def _old_set_brahma_connect_service(self, service):
         self._win.set_brahma_connect_service(service)
 
 
@@ -13693,6 +14592,7 @@ class BrahmaUI:
             "muted": "Muted",
         }.get(state, "Ready")
         try:
+            self._launcher.set_microphone_active(not self._win._muted)
             self._launcher.set_state(state, detail)
         except Exception:
             pass
@@ -13998,7 +14898,9 @@ class BrahmaUI:
 
     def _handle_launcher_action(self, action: str):
         action = (action or "").strip().lower()
-        if action == "open_app":
+        if action == "voice_mode":
+            self._toggle_mute()
+        elif action == "open_app":
             self.show_main()
         elif action == "open_workspace":
             self._show_workspace_sidebar()
@@ -14084,6 +14986,22 @@ class BrahmaUI:
     def muted(self) -> bool:
         return self._win._muted
 
+    @property
+    def wakeword_listening(self) -> bool:
+        return self._win._wakeword_listening
+
+    def bind_push_to_talk(self, callback):
+        self._win.ptt_changed.connect(callback)
+
+    def activate_voice(self):
+        self._win._voice_activate_sig.emit()
+
+    def _activate_voice_on_ui_thread(self):
+        self._win.set_muted_state(False, wakeword=True)
+        # Wake-word and hotkey activation are hands-free controls.  Keep the
+        # current app in focus; the user can open Friday from the tray when
+        # they need its full window.
+
     @muted.setter
     def muted(self, v: bool):
         if v != self._win._muted:
@@ -14094,7 +15012,7 @@ class BrahmaUI:
             self._win.set_muted_state(bool(muted))
 
     def set_muted_state(self, muted: bool, *, wakeword: bool = False):
-        self._win.set_muted_state(bool(muted), wakeword=wakeword)
+        self._win._mute_request_sig.emit(bool(muted), wakeword)
 
     @property
     def current_file(self) -> str | None:
@@ -14140,6 +15058,16 @@ class BrahmaUI:
 
     def write_log(self, text: str):
         self._win._log_sig.emit(text)
+
+    def update_voice_selector(self, persona: str):
+        if hasattr(self._win, "update_voice_selector"):
+            self._win.update_voice_selector(persona)
+
+    def update_stark_design_selector(self, design_key: str):
+        if hasattr(self._launcher, "set_stark_design"):
+            self._launcher.set_stark_design(design_key)
+        if hasattr(self._win, "update_stark_design_selector"):
+            self._win.update_stark_design_selector(design_key)
 
     def show_confirm(self, title: str, detail: str = ""):
         self.w.show_confirm(title, detail)
@@ -14264,7 +15192,7 @@ class BrahmaUI:
             self._win._hud_deliverable_sig.emit(payload)
 
     def show_content(self, title: str, body: str):
-        """Universal rich content presenter. Automatically routes to the Brahma Holographic Left Deliverable Wing."""
+        """Universal rich content presenter. Automatically routes to the Friday Holographic Left Deliverable Wing."""
         import re
         file_path = None
         m = re.search(r'([A-Za-z]:\\[^\s"\'<>`\r\n]+\.(?:pdf|docx|xlsx|pptx|png|jpg|mp4|py|html|json|txt))', body)
@@ -14308,3 +15236,13 @@ class BrahmaUI:
 
 
 
+
+
+# Alias for Friday
+# FridayUI defined above
+
+
+BrahmaTelemetryWing = FridayTelemetryWing
+BrahmaResultWing = FridayResultWing
+BrahmaConnectDevicesPage = FridayConnectDevicesPage
+BrahmaUI = FridayUI
